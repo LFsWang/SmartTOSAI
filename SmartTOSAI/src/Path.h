@@ -12,6 +12,7 @@ using std::vector;
 static int const dx[8]={ 0, 0, 1,-1, 1, 1,-1,-1};
 static int const dy[8]={ 1,-1, 0, 0, 1,-1, 1,-1};
 static int const rv[8]={ 1, 0, 3, 2, 7, 6, 5, 4};
+
 //extern _Move Move;
 class _Pos{
 public:
@@ -35,6 +36,7 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos)
 {
 	ostringstream oss;
 	RECT rectWin;
+	int antiCheat;
 	int winW,winH;
 	if(!GetClientRect(hWnd,&rectWin))
 		return false;
@@ -44,19 +46,32 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos)
 #define _Y(Y) (  winH*(2*(Y)+1)/10+winH-40)
 #define __Y(YY) (_Y(YY)-winH+40)
 	setfillcolor(LIGHTRED);
+	antiCheat=3;
 	SendMessage(hWnd,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
 	fillcircle(_X(pos.y),__Y(pos.x),15);
 	Sleep(100);
+	int fixx,fixy;
 	for(int &n:path)
 	{
+		fixx=rand()%3-1;
+		fixy=rand()%3-1;
 		pos.apply(n);
 		fillcircle(_X(pos.y),__Y(pos.x),15);
-		SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
-		//oss.str("");
-		//oss<<pos.y<<' '<<pos.x<<' '<<_X(pos.y)<<' '<<__Y(pos.x);
-		//MessageBox(GetHWnd(),oss.str().c_str(),"DEGUG",MB_OK);
-		
-		Sleep(100);
+		if(n<4&&rand()%4==0&&antiCheat)
+		{
+			antiCheat--;
+			for(int p=1;p<10;++p)
+			{
+				SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y)+rand()%5-3,_Y(pos.x)+rand()%5-3));
+				Sleep(50);
+			}
+			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y)+fixx,_Y(pos.x)+fixy));
+		}
+		else
+		{
+			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
+		}
+		Sleep(30);
 	}
 	MessageBeep(MB_OK);
 	SendMessage(hWnd,WM_LBUTTONUP,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));

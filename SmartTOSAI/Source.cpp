@@ -4,42 +4,25 @@
 #else
 #define pause()
 #endif
+#define EASYX
 #include<cstdio>
 #include<iostream>
 #include<Windows.h>
 #include<easyx.h>
 #include<cstring>
-#include"src\board.h"
-#include"src\Path.h"
-#include"IDAstar.h"
 #include<vector>
 #include<cstdlib>
 #include<ctime>
+#include"src\BluestackCapture.h"
+#include"src\board.h"
+#include"src\Path.h"
+
+#include"IDAstar.h"
 using namespace std;
-
-#define BLUESTACK_TEXT "BlueStacks App Player for Windows (beta-1)"
-//#define BLUESTACK_TEXT "¤pºâ½L"
-HWND GetBluestackWindow()
-{
-	HWND hWnd;
-	char text[101];
-	do{
-		hWnd=GetForegroundWindow();
-		if(hWnd != NULL){
-			GetWindowText(hWnd,text,100);
-			if(strcmp(text,BLUESTACK_TEXT)==0){
-				return hWnd;
-			}
-		}
-		Sleep(500);
-	}while(true);
-	return NULL;
-}
-
 
 int main()
 {
-	srand(time(NULL));
+	srand(time((time_t)NULL));
 	HWND hwndBluestack;
 	IMAGE img;
 	Board boardMain;
@@ -63,33 +46,36 @@ int main()
 		cout<<"Error while handle Bluestack!"<<endl;pause();
 		exit(1);
 	}
-	if(!SetWindowPos(hwndBluestack,HWND_TOPMOST,0,0,0,0,SWP_NOSIZE|SWP_NOMOVE))
+	if(!SetWindowsTopMost(hwndBluestack))
 	{
 		cout<<"Error while SetWindowsPos:"<<GetLastError();pause();
 		exit(1);
 	}
 
-	
+	/*
+	*	GUI Intro
+	*/
+
 	initgraph(600,600);
 	while(true)
 	{
 		if(!CaptureWindowImage(hwndBluestack,&img))
 		{
 			cout<<"Some thing worng! Can\'t get screen!";
-			pause();
 			break;
 		}
 		cleardevice();
 		putimage(0,0,&img);
-		if(boardMain.loadFromImage(img))
+		if(loadFromImage(boardMain,img))
 		{
 			vector<int> p;
 			_Pos pos(3,3);
-			for(int i=0;i<10;++i)
+			for(int i=0;i<50;++i)
 				p.push_back(rand()%8);
 			applyPath(hwndBluestack,boardMain,p,pos);
 		}
 		Sleep(1000);
-	}	
+	}
+	pause();
 	return 0;
 }
