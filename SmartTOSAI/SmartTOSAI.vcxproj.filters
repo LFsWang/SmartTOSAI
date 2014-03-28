@@ -18,9 +18,6 @@
     <ClCompile Include="Source.cpp">
       <Filter>原始程式檔</Filter>
     </ClCompile>
-    <ClCompile Include="src\board.cpp">
-      <Filter>標頭檔</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\board.h">

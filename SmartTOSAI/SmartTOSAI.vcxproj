@@ -79,7 +79,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp" />
-    <ClCompile Include="src\board.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IDAstar.h" />

@@ -1,7 +1,7 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
-#include<easyx.h>
+
 #include<sstream>
 #include<iomanip>
 #include<vector>
@@ -36,6 +36,7 @@ public:
 
 
 #ifdef EASYX
+#include<easyx.h>
 bool loadFromImage(Board &bo,IMAGE &img)
 {
 	static int dx[]={0,7,7,-7,-7};

@@ -45,7 +45,6 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos)
 #define _X(X) (3+winW*(2*(X)+1)/12)
 #define _Y(Y) (  winH*(2*(Y)+1)/10+winH-40)
 #define __Y(YY) (_Y(YY)-winH+40)
-	setfillcolor(LIGHTRED);
 	antiCheat=3;
 	SendMessage(hWnd,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
 	fillcircle(_X(pos.y),__Y(pos.x),15);
