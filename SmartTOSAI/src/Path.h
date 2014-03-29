@@ -5,6 +5,7 @@
 #include<Windows.h>
 #include"board.h"
 #include<sstream>
+#include<easyx.h>
 using std::ostringstream;
 using std::vector;
 
@@ -22,9 +23,9 @@ public:
 	_Pos(int _x,int _y):x(_x),y(_y){}
 	bool apply(int d)
 	{
-		if(x+dx[d]<0||5<=x+dx[d])
+		if(x+dx[d]<=0||5<x+dx[d])
 			return false;
-		if(y+dy[d]<0||6<=y+dy[d])
+		if(y+dy[d]<=0||6<y+dy[d])
 			return false;
 		x+=dx[d];
 		y+=dy[d];
@@ -42,8 +43,8 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos)
 		return false;
 	winW=rectWin.right-rectWin.left;
 	winH=(rectWin.bottom-rectWin.top)/2;
-#define _X(X) (3+winW*(2*(X)+1)/12)
-#define _Y(Y) (  winH*(2*(Y)+1)/10+winH-40)
+#define _X(X) (3+winW*(2*(X)-1)/12)
+#define _Y(Y) (  winH*(2*(Y)-1)/10+winH-40)
 #define __Y(YY) (_Y(YY)-winH+40)
 	antiCheat=3;
 	SendMessage(hWnd,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
@@ -64,13 +65,15 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos)
 				SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y)+rand()%5-3,_Y(pos.x)+rand()%5-3));
 				Sleep(50);
 			}
+			fillcircle(_X(pos.y),__Y(pos.x),1);
 			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y)+fixx,_Y(pos.x)+fixy));
 		}
 		else
 		{
+			fillcircle(_X(pos.y),__Y(pos.x),1);
 			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
 		}
-		Sleep(30);
+		Sleep(100);
 	}
 	MessageBeep(MB_OK);
 	SendMessage(hWnd,WM_LBUTTONUP,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));

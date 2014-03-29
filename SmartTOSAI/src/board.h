@@ -83,8 +83,8 @@ bool loadFromImage(Board &bo,IMAGE &img)
 				//MessageBox(GetHWnd(),oss.str().c_str(),"DEGUG",MB_OK);
 				c=C_EMPTY;t=T_NORMAL;flag=false;
 			}
-			bo.b[i][j].color=c;
-			bo.b[i][j].type=t;
+			bo.b[j][i].color=c;
+			bo.b[j][i].type=t;
 		}
 	}
 	return flag;

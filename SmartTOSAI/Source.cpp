@@ -70,9 +70,14 @@ int main()
 		{
 			vector<int> p;
 			_Pos pos(3,3);
-			for(int i=0;i<50;++i)
-				p.push_back(rand()%8);
+			/*for(int i=0;i<50;++i)
+				p.push_back(rand()%8);*/
+			outtextxy(0,0,"THINK...");
+			IDAStar(boardMain,&p,&pos);
+			outtextxy(0,0,"OK...");
+			pause();
 			applyPath(hwndBluestack,boardMain,p,pos);
+			Sleep(2000);
 		}
 		Sleep(1000);
 	}
