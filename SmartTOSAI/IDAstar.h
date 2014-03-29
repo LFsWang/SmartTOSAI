@@ -31,6 +31,21 @@ void display(Bead _B[8][8])
     pause();
 }
 
+bool userStopFlag;
+
+inline bool userStop(){
+	if(userStopFlag)return true;
+	
+	HANDLE hMutex=OpenMutex(MUTEX_ALL_ACCESS,false,"_Smart_User_Wait_Flag");
+	if(hMutex==NULL){
+		userStopFlag=true;
+		return true;
+	}else{
+		CloseHandle(hMutex);
+		return false;
+	}
+}
+
 int clacComble(Bead _B[8][8])
 {
 
@@ -126,36 +141,36 @@ int clacComble(Bead _B[8][8])
     return combo;
 }
 
-#define MAX_GOAL 6
+#define MAX_GOAL 7
 #include<sstream>
+
 std::ostringstream oss;
 vector<int> * commonBest=nullptr;
+_Pos nowpos,*resolvepos;
 int coBest;
-bool isUpdate;
-void updateBest(vector<int> *n,int comble)
+
+inline void updateBest(vector<int> *n,int comble)
 {
 	if(comble<0)comble=-comble;
     if(comble<coBest)return ;
-    if(comble==coBest&&commonBest->size()<n->size())return;
+    if(comble==coBest&&commonBest->size()<=n->size())return;
     (*commonBest)=(*n);
 	coBest=comble;
-	isUpdate=true;
+	*resolvepos=nowpos;
 	oss.str("");
-	oss<<"THINK"<<coBest<<' '<<n->size();
+	oss<<"THINK : "<<coBest<<" Combo in "<<commonBest->size()<<" Steps";
 	outtextxy(0,0,oss.str().c_str());
-
 }
 int mdeep;
 //if int<x : FIND GOAL
 int LDFS(Board b,_Pos pos,int r,int deep,vector<int> *path)
 {
-    //display(b.b);
-    //cout<<coBest<<endl;
-    //if(deep>5)pause();
     int comb=clacComble(b.b);
+	updateBest(path,comb);
     int H=2*(MAX_GOAL-comb);
     if(H<=0)return -comb;
     if(H+deep>mdeep)return comb;
+	if(userStop())return comb;
     _Pos fin;
     int cost;
     for(int i=0;i<4;++i)
@@ -169,12 +184,7 @@ int LDFS(Board b,_Pos pos,int r,int deep,vector<int> *path)
         swap(b.b[fin.x][fin.y],b.b[pos.x][pos.y]);
         int rt=LDFS(b,fin,rv[i],deep+cost,path);
         if(rt<0){
-                updateBest(path,rt);
                 return rt;
-        }
-        if(rt>comb){
-            comb=rt;
-            updateBest(path,rt);
         }
         swap(b.b[fin.x][fin.y],b.b[pos.x][pos.y]);
         path->pop_back();
@@ -183,31 +193,22 @@ int LDFS(Board b,_Pos pos,int r,int deep,vector<int> *path)
 }
 void IDAStar(Board &b,vector<int> *path,_Pos *pos)
 {
+	userStopFlag=false;
     path->clear();
     commonBest=path;
+	resolvepos=pos;
     coBest=0;
     vector<int> tmp;
     const int steplimit=30;
-    int hmax=0;
-    for(mdeep=2;mdeep<steplimit;++mdeep)
+    for(mdeep=2;mdeep<steplimit;mdeep+=2)
     {
-        cout<<"IN"<<mdeep<<endl;
         for(int i=0;i<30;++i)
         {
-			if(i==7){
-				cout<<"H";
-			}
-            _Pos p=_Pos(1+i/6,1+i%5);
+            nowpos=_Pos(1+i/6,1+i%5);
             tmp.clear();
-            int rt=LDFS(b,p,-1,0,&tmp);
-			if(isUpdate)*pos=p;
-            if(rt<0){
-                *pos=p;
+            int rt=LDFS(b,nowpos,-1,0,&tmp);
+            if(rt<0||userStop()){
                 goto FINISH;
-            }
-            if(rt>hmax){
-                *pos=p;
-                hmax=rt;
             }
         }
     }

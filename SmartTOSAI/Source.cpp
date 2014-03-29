@@ -13,6 +13,11 @@
 #include<vector>
 #include<cstdlib>
 #include<ctime>
+
+#include<thread>
+#include<future>
+#include<chrono>
+
 #include"src\BluestackCapture.h"
 #include"src\board.h"
 #include"src\Path.h"
@@ -22,16 +27,21 @@ using namespace std;
 
 int main()
 {
+	
 	srand(time((time_t)NULL));
 	HWND hwndBluestack;
 	IMAGE img;
 	Board boardMain;
+	ostringstream oss;
+	/*
+	*	Load AI use C++ 11
+	*/
 	/*
 	*	Intro Massage
 	*/
 	cout<<"SmartTOSAI By LFsWang!"<<endl
 		<<"======================"<<endl
-		<<"Ver."<<endl
+		<<"Ver.0.21alpha"<<endl
 		<<"Build :"<<__DATE__<<' '<<__TIME__<<endl
 		<<"======================"<<endl<<endl;
 	cout<<"Find Bluestack"<<endl
@@ -55,10 +65,20 @@ int main()
 	/*
 	*	GUI Intro
 	*/
-
+	bool Stopflag=false;
 	initgraph(600,600);
 	while(true)
 	{
+		if(Stopflag||GetAsyncKeyState(VK_F1)){
+			while(true){
+				outtextxy(0,0,"Lock! Press F1 to continue...");
+				if(GetAsyncKeyState(VK_F1)){
+					break;
+				}
+				Sleep(10);
+			}
+			Stopflag=false;
+		}
 		if(!CaptureWindowImage(hwndBluestack,&img))
 		{
 			cout<<"Some thing worng! Can\'t get screen!";
@@ -68,16 +88,53 @@ int main()
 		putimage(0,0,&img);
 		if(loadFromImage(boardMain,img))
 		{
-			vector<int> p;
-			_Pos pos(3,3);
-			/*for(int i=0;i<50;++i)
-				p.push_back(rand()%8);*/
+			vector<int> path;
+			_Pos posStart;
+			HANDLE hMutex;
+			time_t clock_start;
+			time_t clock_now;
+			int flag=0;
 			outtextxy(0,0,"THINK...");
-			IDAStar(boardMain,&p,&pos);
+
+			hMutex=CreateMutex(NULL,false,"_Smart_User_Wait_Flag");
+			if(GetLastError() == ERROR_ALREADY_EXISTS){
+				MessageBox(GetHWnd(),"Mutex is used!\nPlease check if anything use!","ERROR_ALREADY_EXISTS",MB_ICONERROR);
+				continue ;
+			}
+
+			future_status::future_status taskStatus;
+			future<void> task=async(IDAStar,boardMain,&path,&posStart);
+			double time;
+			clock_start=clock();
+			do{
+				taskStatus = task.wait_for(std::chrono::milliseconds(100));
+				clock_now=clock();
+				time=((double)clock_now-clock_start)/CLOCKS_PER_SEC;
+				oss.str("");
+				oss<<time<<"Second";
+				outtextxy(0,15,oss.str().c_str());
+				if(GetAsyncKeyState(VK_ESCAPE)||time>20){
+					outtextxy(0,15,"Send Stop Signal..");
+					CloseHandle(hMutex);
+					hMutex=NULL;
+					if(time<=20){
+						Stopflag=true;
+					}
+				}
+			}while(taskStatus != future_status::ready);
+			if(Stopflag){
+				continue;
+			}
+			task.get();
+			if(hMutex!=NULL){
+				//ReleaseMutex(hMutex);
+				CloseHandle(hMutex);
+			}
+			//IDAStar(boardMain,&p,&posStart);
+
 			outtextxy(0,0,"OK...");
-			pause();
-			applyPath(hwndBluestack,boardMain,p,pos);
-			Sleep(2000);
+			applyPath(hwndBluestack,boardMain,path,posStart);
+			Sleep(3000);
 		}
 		Sleep(1000);
 	}

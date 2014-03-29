@@ -53,7 +53,7 @@ bool loadFromImage(Board &bo,IMAGE &img)
 
 	for(int i=1;i<=6;++i)
 	{
-		for(int j=1;j<=5;++j)
+		for(int j=5;j>=1;--j)
 		{
 			int x=3+winW*(2*i-1)/12;
 			int y=  winH*(2*j-1)/10;
@@ -68,7 +68,7 @@ bool loadFromImage(Board &bo,IMAGE &img)
 			if(H<20&&S>0.89){c=C_FILE;t=T_NORMAL;}//RED OK
 			else if((10<H&&H<32||i==0&&j==4&&80<H&&H<83) &&V>0.94){c=C_FILE;t=T_STRENGTH;}
 			else if(115<H&&H<130&&0.8<S&&S<0.9){c=C_WOOD;t=T_NORMAL;}//GREEN
-			else if(120<H&&H<130&&0.9<S&&0.9<V){c=C_WOOD;t=T_STRENGTH;}
+			else if(115<H&&H<130&&0.9<S&&0.9<V){c=C_WOOD;t=T_STRENGTH;}
 			else if(40 <H&&H<100&&V<0.9){c=C_RAY;t=T_NORMAL;}//YELLOW
 			else if(40 <H&&H<100&&V>0.9){c=C_RAY;t=T_STRENGTH;}
 			else if(325<H&&H<350&&V<0.9){c=C_HEART;t=T_NORMAL;}//HEART
@@ -78,8 +78,9 @@ bool loadFromImage(Board &bo,IMAGE &img)
 			else if(290<H&&H<310&&V<0.9){c=C_DARK;t=T_NORMAL;}//Dark
 			else if(265<H&&H<295&&V>0.9){c=C_DARK;t=T_STRENGTH;}
 			else{
-				//ostringstream oss;
-				//oss<<i<<' '<<j<<' '<<H<<' '<<S<<' '<<V;
+				ostringstream oss;
+				oss<<H<<' '<<S<<' '<<V;
+				outtextxy(x,y,oss.str().c_str());
 				//MessageBox(GetHWnd(),oss.str().c_str(),"DEGUG",MB_OK);
 				c=C_EMPTY;t=T_NORMAL;flag=false;
 			}

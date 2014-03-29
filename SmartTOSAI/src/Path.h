@@ -53,8 +53,8 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos)
 	int fixx,fixy;
 	for(int &n:path)
 	{
-		fixx=rand()%3-1;
-		fixy=rand()%3-1;
+		fixx=rand()%5-1;
+		fixy=rand()%5-1;
 		pos.apply(n);
 		fillcircle(_X(pos.y),__Y(pos.x),15);
 		if(n<4&&rand()%4==0&&antiCheat)
@@ -73,7 +73,7 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos)
 			fillcircle(_X(pos.y),__Y(pos.x),1);
 			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
 		}
-		Sleep(100);
+		Sleep(90);
 	}
 	MessageBeep(MB_OK);
 	SendMessage(hWnd,WM_LBUTTONUP,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
