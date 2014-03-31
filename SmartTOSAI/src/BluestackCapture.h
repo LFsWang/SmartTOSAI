@@ -34,6 +34,7 @@ bool CaptureWindowImage(HWND hWnd,IMAGE *img)
 
 	if(!GetWindowRect(hWnd,&rectWindow))
 		{return false;}
+
 	W=rectWindow.right-rectWindow.left;
 	H=(rectWindow.bottom-rectWindow.top)/2;
 

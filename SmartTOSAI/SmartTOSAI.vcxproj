@@ -81,6 +81,7 @@
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="baseScreenSizeDef.h" />
     <ClInclude Include="IDAstar.h" />
     <ClInclude Include="src\BluestackCapture.h" />
     <ClInclude Include="src\board.h" />

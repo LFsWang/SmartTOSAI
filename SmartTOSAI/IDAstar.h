@@ -45,7 +45,7 @@ inline bool userStop(){
 		return false;
 	}
 }
-
+bool heartFlag;
 int clacComble(Bead _B[8][8])
 {
 
@@ -77,6 +77,7 @@ int clacComble(Bead _B[8][8])
             legalComle=true;
             if(Queue[j]>=3)
             {
+				if(b[i][sum].color==C_HEART)heartFlag=true;
                 for(int k=0;k<Queue[j];++k){
                     flag[i][sum+k]=true;
 					int rv=1;
@@ -109,6 +110,7 @@ int clacComble(Bead _B[8][8])
             if(Queue[i]>=3)
             {
                 legalComle=true;
+				if(b[sum][j].color==C_HEART)heartFlag=true;
                 for(int k=0;k<Queue[i];++k)
                 {
                     legalComle&= !flag[k+sum][j] && !(  b[k+sum][j].color==b[k+sum][j-1].color &&
@@ -148,23 +150,36 @@ std::ostringstream oss;
 vector<int> * commonBest=nullptr;
 _Pos nowpos,*resolvepos;
 int coBest;
-
+bool HeartForce=false;
 inline void updateBest(vector<int> *n,int comble)
 {
+	if(HeartForce){
+		if(!heartFlag){
+			return ;
+		}
+	}
+
 	if(comble<0)comble=-comble;
+
     if(comble<coBest)return ;
-    if(comble==coBest&&commonBest->size()<=n->size())return;
+
+    if(comble==coBest){
+		if(commonBest->size()<=n->size())return ;
+	}
+
     (*commonBest)=(*n);
 	coBest=comble;
 	*resolvepos=nowpos;
+
 	oss.str("");
 	oss<<"THINK : "<<coBest<<" Combo in "<<commonBest->size()<<" Steps";
 	outtextxy(0,0,oss.str().c_str());
 }
 int mdeep;
 //if int<x : FIND GOAL
-int LDFS(Board b,_Pos pos,int r,int deep,vector<int> *path)
+int LDFS(Board &b,_Pos &pos,int r,int deep,vector<int> *path)
 {
+	heartFlag=false;
     int comb=clacComble(b.b);
 	updateBest(path,comb);
     int H=2*(MAX_GOAL-comb);
@@ -178,8 +193,11 @@ int LDFS(Board b,_Pos pos,int r,int deep,vector<int> *path)
         if(i==r)continue;
         fin=pos;
         if(!fin.apply(i))continue;
-        if(i>=4||b.b[fin.x][fin.y].color==b.b[pos.x][pos.y].color)cost=2;
+        
+		if(b.b[fin.x][fin.y].color==b.b[pos.x][pos.y].color)cost=2;
+		else if(i>=4&&deep<15)cost=2;
         else cost=1;
+
         path->push_back(i);
         swap(b.b[fin.x][fin.y],b.b[pos.x][pos.y]);
         int rt=LDFS(b,fin,rv[i],deep+cost,path);
@@ -191,16 +209,21 @@ int LDFS(Board b,_Pos pos,int r,int deep,vector<int> *path)
     }
     return comb;
 }
-void IDAStar(Board &b,vector<int> *path,_Pos *pos)
+
+void IDAStar(Board &b,vector<int> *path,_Pos *pos,int *config)
 {
 	userStopFlag=false;
+
     path->clear();
     commonBest=path;
 	resolvepos=pos;
     coBest=0;
+	/*TEST*/
+	HeartForce=(bool)config[0];
+
     vector<int> tmp;
-    const int steplimit=30;
-    for(mdeep=2;mdeep<steplimit;mdeep+=2)
+    const int steplimit=40;
+    for(mdeep=3;mdeep<steplimit;mdeep+=3)
     {
         for(int i=0;i<30;++i)
         {

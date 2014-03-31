@@ -4,7 +4,9 @@
 #else
 #define pause()
 #endif
+
 #define EASYX
+
 #include<cstdio>
 #include<iostream>
 #include<Windows.h>
@@ -27,8 +29,7 @@ using namespace std;
 
 int main()
 {
-	
-	srand(time((time_t)NULL));
+	srand(time(nullptr));
 	HWND hwndBluestack;
 	IMAGE img;
 	Board boardMain;
@@ -67,13 +68,24 @@ int main()
 	*/
 	bool Stopflag=false;
 	initgraph(600,600);
+	Sleep(3000);
+	int config[2]={0};/*TEST*/
 	while(true)
 	{
-		if(Stopflag||GetAsyncKeyState(VK_F1)){
+		if(Stopflag||GetAsyncKeyState(VK_ESCAPE)){
 			while(true){
-				outtextxy(0,0,"Lock! Press F1 to continue...");
+				outtextxy(0,0,"Locked! Press F1 to continue...");
 				if(GetAsyncKeyState(VK_F1)){
 					break;
+				}
+				if(GetAsyncKeyState(VK_F5)){
+					config[0]=(config[0]+1)%2;
+					Sleep(300);
+				}
+				if(config[0]){
+					outtextxy(0,50,"Force Heart ON ");
+				}else{
+					outtextxy(0,50,"Force Heart OFF");
 				}
 				Sleep(10);
 			}
@@ -103,15 +115,20 @@ int main()
 			}
 
 			future_status::future_status taskStatus;
-			future<void> task=async(IDAStar,boardMain,&path,&posStart);
+			future<void> task=async(IDAStar,boardMain,&path,&posStart,config);
 			double time;
 			clock_start=clock();
 			do{
 				taskStatus = task.wait_for(std::chrono::milliseconds(100));
 				clock_now=clock();
 				time=((double)clock_now-clock_start)/CLOCKS_PER_SEC;
+
 				oss.str("");
 				oss<<time<<"Second";
+				if(config[0]){
+					oss<<"ForceHeart : ON";
+				}
+
 				outtextxy(0,15,oss.str().c_str());
 				if(GetAsyncKeyState(VK_ESCAPE)||time>20){
 					outtextxy(0,15,"Send Stop Signal..");
@@ -130,8 +147,10 @@ int main()
 				//ReleaseMutex(hMutex);
 				CloseHandle(hMutex);
 			}
+			if(path.size()==0){
+				MessageBox(GetHWnd(),"Fail to find Path!","Error",MB_ICONERROR);
+			}
 			//IDAStar(boardMain,&p,&posStart);
-
 			outtextxy(0,0,"OK...");
 			applyPath(hwndBluestack,boardMain,path,posStart);
 			Sleep(3000);
