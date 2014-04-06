@@ -23,6 +23,7 @@ inline bool SetWindowsTopMost(HWND hWnd)
 {
 	return SetWindowPos(hWnd,HWND_TOPMOST,0,0,0,0,SWP_NOSIZE|SWP_NOMOVE);
 }
+
 #ifdef EASYX
 #include<Easyx.h>
 bool CaptureWindowImage(HWND hWnd,IMAGE *img)

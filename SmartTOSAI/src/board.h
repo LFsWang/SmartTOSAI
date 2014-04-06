@@ -6,6 +6,8 @@
 #include<iomanip>
 #include<vector>
 #include<Windows.h>
+#include<fstream>
+#include<vector>
 /*for debug*/
 using std::ostringstream;
 
@@ -39,6 +41,7 @@ public:
 #include<easyx.h>
 bool loadFromImage(Board &bo,IMAGE &img)
 {
+	
 	static int dx[]={0,7,7,-7,-7,10,-10,0,0};
 	static int dy[]={0,7,-7,7,-7,0,0,10,-10};
 
@@ -49,15 +52,15 @@ bool loadFromImage(Board &bo,IMAGE &img)
 	
 	bool flag=true;
 
-	winW=img.getwidth()-6;
-	winH=img.getheight();
+	winW=img.getwidth()-8;
+	winH=img.getheight()+5;
 
 	for(int i=6;i>0;--i)
 	{
 		for(int j=1;j<=5;++j)
 		{
-			int x=3+winW*(2*i-1)/12;
-			int y=  winH*(2*j-1)/10;
+			int x=4+winW*(2*i-1)/12;
+			int y=  winH*(2*j-1)/10-3;
 			/*
 			*	may be it can delete max & min
 			*/
@@ -72,8 +75,8 @@ bool loadFromImage(Board &bo,IMAGE &img)
 
 			if(H<20&&S>0.89){c=C_FILE;t=T_NORMAL;}//RED OK
 			else if((10<H&&H<32||i==0&&j==4&&80<H&&H<83) &&V>0.94){c=C_FILE;t=T_STRENGTH;}
-			else if(112<H&&H<143&&0.8<S&&S<0.9){c=C_WOOD;t=T_NORMAL;}//GREEN
-			else if(112<H&&H<143&&0.9<S&&0.9<V){c=C_WOOD;t=T_STRENGTH;}
+			else if(108<H&&H<144&&V<0.9){c=C_WOOD;t=T_NORMAL;}//GREEN
+			else if(108<H&&H<144&&V>0.9){c=C_WOOD;t=T_STRENGTH;}
 			else if(40 <H&&H<100&&V<0.9){c=C_RAY;t=T_NORMAL;}//YELLOW
 			else if(38 <H&&H<100&&V>0.9){c=C_RAY;t=T_STRENGTH;}
 			else if(325<H&&H<350&&V<0.9){c=C_HEART;t=T_NORMAL;}//HEART
@@ -81,11 +84,11 @@ bool loadFromImage(Board &bo,IMAGE &img)
 			else if(190<H&&H<210&&V<0.9){c=C_WATER;t=T_NORMAL;}//Blue
 			else if(150<H&&H<210&&V>0.9){c=C_WATER;t=T_STRENGTH;}
 			else if(290<H&&H<310&&V<0.9){c=C_DARK;t=T_NORMAL;}//Dark
-			else if(258<H&&H<295&&V>0.9){c=C_DARK;t=T_STRENGTH;}
+			else if(250<H&&H<295&&V>0.9){c=C_DARK;t=T_STRENGTH;}
 			else{
 				//Debug info
-				setfillcolor(RED);
-				fillcircle(x,y,10);
+				//setfillcolor(RED);
+				//fillcircle(x,y,10);
 				//Debug info
 				oss.str("");
 				oss<<H<<' '<<S<<' '<<V;

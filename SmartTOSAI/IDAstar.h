@@ -11,9 +11,14 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include<sstream>
 
 #include<easyx.h>
 using namespace std;
+
+#define MAX_GOAL 7
+
+ostringstream oss;
 
 void display(Bead _B[8][8])
 {
@@ -32,7 +37,6 @@ void display(Bead _B[8][8])
 }
 
 bool userStopFlag;
-
 inline bool userStop(){
 	if(userStopFlag)return true;
 	
@@ -45,10 +49,10 @@ inline bool userStop(){
 		return false;
 	}
 }
+
 bool heartFlag;
 int clacComble(Bead _B[8][8])
 {
-
     Bead b[8][8];
     bool flag[8][8];
     int Queue[8];
@@ -143,14 +147,12 @@ int clacComble(Bead _B[8][8])
     return combo;
 }
 
-#define MAX_GOAL 7
-#include<sstream>
 
-std::ostringstream oss;
 vector<int> * commonBest=nullptr;
-_Pos nowpos,*resolvepos;
+_Pos nowpos,* resolvepos=nullptr;
 int coBest;
 bool HeartForce=false;
+
 inline void updateBest(vector<int> *n,int comble)
 {
 	if(HeartForce){
@@ -179,16 +181,20 @@ int mdeep;
 //if int<x : FIND GOAL
 int LDFS(Board &b,_Pos &pos,int r,int deep,vector<int> *path)
 {
+	_Pos fin;
+    int cost,H;
+
 	heartFlag=false;
     int comb=clacComble(b.b);
 	updateBest(path,comb);
-    int H=2*(MAX_GOAL-comb);
-    if(H<=0)return -comb;
+
+    H=2*(MAX_GOAL-comb);
+
+    if(H<=0)		return -comb;
     if(H+deep>mdeep)return comb;
-	if(userStop())return comb;
-    _Pos fin;
-    int cost;
-    for(int i=0;i<4;++i)
+	if(userStop())	return comb;
+    
+    for(int i=0;i<8;++i)
     {
         if(i==r)continue;
         fin=pos;
@@ -200,10 +206,12 @@ int LDFS(Board &b,_Pos &pos,int r,int deep,vector<int> *path)
 
         path->push_back(i);
         swap(b.b[fin.x][fin.y],b.b[pos.x][pos.y]);
+
         int rt=LDFS(b,fin,rv[i],deep+cost,path);
         if(rt<0){
                 return rt;
         }
+
         swap(b.b[fin.x][fin.y],b.b[pos.x][pos.y]);
         path->pop_back();
     }

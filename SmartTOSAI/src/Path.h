@@ -65,12 +65,10 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos)
 				SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y)+rand()%5-3,_Y(pos.x)+rand()%5-3));
 				Sleep(50);
 			}
-			fillcircle(_X(pos.y),__Y(pos.x),1);
 			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y)+fixx,_Y(pos.x)+fixy));
 		}
 		else
 		{
-			fillcircle(_X(pos.y),__Y(pos.x),1);
 			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
 		}
 		Sleep(90);
