@@ -15,6 +15,7 @@
 #include<vector>
 #include<cstdlib>
 #include<ctime>
+#include<direct.h>
 
 #include<thread>
 #include<future>
@@ -34,9 +35,11 @@ int main()
 	IMAGE img;
 	Board boardMain;
 	ostringstream oss;
+	int aiTImeLimit=16;
 	/*
 	*	Load AI use C++ 11
 	*/
+	_mkdir("img");
 	/*
 	*	Intro Massage
 	*/
@@ -45,6 +48,16 @@ int main()
 		<<"Ver.0.21alpha"<<endl
 		<<"Build :"<<__DATE__<<' '<<__TIME__<<endl
 		<<"======================"<<endl<<endl;
+	cout<<"Set AI Timelimit (Second) :";
+	cin>>aiTImeLimit;
+
+	if(!cin||aiTImeLimit<1){
+		cin.clear();
+		while(cin.get()!='\n');
+		cout<<"setting error. use default 16sec"<<endl;
+		aiTImeLimit=16;
+	}
+
 	cout<<"Find Bluestack"<<endl
 		<<"Please click your bluestack window to continue..."<<endl;
 
@@ -67,7 +80,7 @@ int main()
 	*	GUI Intro
 	*/
 	bool Stopflag=false;
-	initgraph(600,600);
+	initgraph(500,400);
 	Sleep(3000);
 	int config[2]={0};/*TEST*/
 	while(true)
@@ -116,25 +129,25 @@ int main()
 
 			future_status::future_status taskStatus;
 			future<void> task=async(IDAStar,boardMain,&path,&posStart,config);
-			double time;
+			double runtime;
 			clock_start=clock();
 			do{
 				taskStatus = task.wait_for(std::chrono::milliseconds(100));
 				clock_now=clock();
-				time=((double)clock_now-clock_start)/CLOCKS_PER_SEC;
+				runtime=((double)clock_now-clock_start)/CLOCKS_PER_SEC;
 
 				oss.str("");
-				oss<<time<<"Second";
+				oss<<runtime<<"Second";
 				if(config[0]){
 					oss<<"ForceHeart : ON";
 				}
 
 				outtextxy(0,15,oss.str().c_str());
-				if(GetAsyncKeyState(VK_ESCAPE)||time>20){
+				if(GetAsyncKeyState(VK_ESCAPE)||runtime>aiTImeLimit){
 					outtextxy(0,15,"Send Stop Signal..");
 					CloseHandle(hMutex);
 					hMutex=NULL;
-					if(time<=20){
+					if(runtime<=aiTImeLimit){
 						Stopflag=true;
 					}
 				}
@@ -151,9 +164,14 @@ int main()
 				MessageBox(GetHWnd(),"Fail to find Path!","Error",MB_ICONERROR);
 			}
 			//IDAStar(boardMain,&p,&posStart);
-			outtextxy(0,0,"OK...");
-			applyPath(hwndBluestack,boardMain,path,posStart);
-			Sleep(3000);
+			outtextxy(0,0,"!");
+			if(!path.empty()){
+				applyPath(hwndBluestack,boardMain,path,posStart);
+				oss.str("");
+				oss<<"img\\"<<time(NULL)<<".bmp";
+				saveimage(oss.str().c_str());
+				Sleep(3000);
+			}
 		}
 		Sleep(1000);
 	}

@@ -16,25 +16,11 @@
 #include<easyx.h>
 using namespace std;
 
-#define MAX_GOAL 7
+//#define MAX_GOAL 8
+int maxgoal;
 
 ostringstream oss;
 
-void display(Bead _B[8][8])
-{
-    cout<<endl;
-    for(int i=1;i<=5;++i)
-    {
-        for(int j=1;j<=6;++j)
-        {
-            if(_B[i][j].color==0)cout<<"  ";
-            else cout<<(int)_B[i][j].color<<' ';
-        }
-        cout<<endl;
-    }
-    cout<<endl;
-    pause();
-}
 
 bool userStopFlag;
 inline bool userStop(){
@@ -174,7 +160,7 @@ inline void updateBest(vector<int> *n,int comble)
 	*resolvepos=nowpos;
 
 	oss.str("");
-	oss<<"THINK : "<<coBest<<" Combo in "<<commonBest->size()<<" Steps";
+	oss<<"("<<maxgoal<<")THINK : "<<coBest<<" Combo in "<<commonBest->size()<<" Steps";
 	outtextxy(0,0,oss.str().c_str());
 }
 int mdeep;
@@ -188,7 +174,7 @@ int LDFS(Board &b,_Pos &pos,int r,int deep,vector<int> *path)
     int comb=clacComble(b.b);
 	updateBest(path,comb);
 
-    H=2*(MAX_GOAL-comb);
+    H=2*(maxgoal-comb);
 
     if(H<=0)		return -comb;
     if(H+deep>mdeep)return comb;
@@ -201,7 +187,7 @@ int LDFS(Board &b,_Pos &pos,int r,int deep,vector<int> *path)
         if(!fin.apply(i))continue;
         
 		if(b.b[fin.x][fin.y].color==b.b[pos.x][pos.y].color)cost=2;
-		else if(i>=4&&deep<15)cost=2;
+		//else if(i>=4&&deep<15)cost=2;
         else cost=1;
 
         path->push_back(i);
@@ -218,8 +204,21 @@ int LDFS(Board &b,_Pos &pos,int r,int deep,vector<int> *path)
     return comb;
 }
 
+int clacMaxGoal(const Board &b){
+	int c[7]={0};
+	for(int i=1;i<=5;++i)
+		for(int j=1;j<=6;++j)
+			c[b.b[i][j].color]++;
+	int all=0;
+	for(int i=1;i<=6;++i){
+		all+=c[i]/3;
+	}
+	return all;
+}
+
 void IDAStar(Board &b,vector<int> *path,_Pos *pos,int *config)
 {
+	maxgoal=clacMaxGoal(b);
 	userStopFlag=false;
 
     path->clear();
@@ -233,7 +232,7 @@ void IDAStar(Board &b,vector<int> *path,_Pos *pos,int *config)
     const int steplimit=40;
     for(mdeep=3;mdeep<steplimit;mdeep+=3)
     {
-        for(int i=0;i<30;++i)
+        for(int i=29;i>=0;--i)
         {
             nowpos=_Pos(1+i/6,1+i%5);
             tmp.clear();

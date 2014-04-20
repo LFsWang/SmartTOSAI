@@ -77,14 +77,14 @@ bool loadFromImage(Board &bo,IMAGE &img)
 			else if((10<H&&H<32||i==0&&j==4&&80<H&&H<83) &&V>0.94){c=C_FILE;t=T_STRENGTH;}
 			else if(108<H&&H<144&&V<0.9){c=C_WOOD;t=T_NORMAL;}//GREEN
 			else if(108<H&&H<144&&V>0.9){c=C_WOOD;t=T_STRENGTH;}
-			else if(40 <H&&H<100&&V<0.9){c=C_RAY;t=T_NORMAL;}//YELLOW
-			else if(38 <H&&H<100&&V>0.9){c=C_RAY;t=T_STRENGTH;}
+			else if(40 <H&&H<45&&V<0.9){c=C_RAY;t=T_NORMAL;}//YELLOW 41 1 0.7
+			else if(38 <H&&H<110&&V>0.9){c=C_RAY;t=T_STRENGTH;}//38~108
 			else if(325<H&&H<350&&V<0.9){c=C_HEART;t=T_NORMAL;}//HEART
 			else if(325<H&&H<350&&V>0.9){c=C_HEART;t=T_STRENGTH;}
 			else if(190<H&&H<210&&V<0.9){c=C_WATER;t=T_NORMAL;}//Blue
 			else if(150<H&&H<210&&V>0.9){c=C_WATER;t=T_STRENGTH;}
-			else if(290<H&&H<310&&V<0.9){c=C_DARK;t=T_NORMAL;}//Dark
-			else if(250<H&&H<295&&V>0.9){c=C_DARK;t=T_STRENGTH;}
+			else if(295<H&&H<302&&V<0.9){c=C_DARK;t=T_NORMAL;}//Dark 298 0.9 0.6
+			else if(250<H&&H<295&&V>0.9){c=C_DARK;t=T_STRENGTH;}//290~255 0.36 1
 			else{
 				//Debug info
 				//setfillcolor(RED);
@@ -100,6 +100,15 @@ bool loadFromImage(Board &bo,IMAGE &img)
 			}
 			bo.b[j][i].color=c;
 			bo.b[j][i].type=t;
+			if(c==C_RAY&&t==T_STRENGTH){
+				setfillcolor(RED);
+				fillcircle(x,y,10);
+				if(t==T_STRENGTH)
+					outtextxy(x,y,'S');
+				oss.str("");
+				oss<<H<<' '<<S<<' '<<V;
+				outtextxy(x,y+15*(i-3),oss.str().c_str());
+			}
 		}
 	}
 	return flag;

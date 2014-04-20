@@ -39,24 +39,32 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos)
 	RECT rectWin;
 	int antiCheat;
 	int winW,winH;
+	int tmp=0;
+	setlinestyle(PS_SOLID,6);
+	setlinecolor(YELLOW);
+
 	if(!GetClientRect(hWnd,&rectWin))
 		return false;
 	winW=rectWin.right-rectWin.left;
 	winH=(rectWin.bottom-rectWin.top)/2;
+
+
 #define _X(X) (3+winW*(2*(X)-1)/12)
-#define _Y(Y) (  winH*(2*(Y)-1)/10+winH-40)
+#define _Y(Y) (int)(  winH*(2*(Y)-1)/10.0+winH-40)
 #define __Y(YY) (_Y(YY)-winH+40)
 	antiCheat=3;
 	SendMessage(hWnd,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
-	fillcircle(_X(pos.y),__Y(pos.x),15);
+	//fillcircle(_X(pos.y),__Y(pos.x),15);
+	moveto(_X(pos.y),__Y(pos.x));
 	Sleep(100);
 	int fixx,fixy;
 	for(int &n:path)
 	{
+		tmp+=9;
+		setlinecolor(YELLOW-tmp);
 		fixx=rand()%5-1;
 		fixy=rand()%5-1;
 		pos.apply(n);
-		fillcircle(_X(pos.y),__Y(pos.x),15);
 		if(n<4&&rand()%4==0&&antiCheat)
 		{
 			antiCheat--;
@@ -66,10 +74,12 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos)
 				Sleep(50);
 			}
 			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y)+fixx,_Y(pos.x)+fixy));
+			lineto(_X(pos.y)+fixx,__Y(pos.x)+fixy);
 		}
 		else
 		{
 			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
+			lineto(_X(pos.y),__Y(pos.x));
 		}
 		Sleep(90);
 	}
