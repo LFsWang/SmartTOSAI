@@ -1,6 +1,8 @@
 #ifndef _BLUESTACKCAPTURE_H
 #define _BLUESTACKCAPTURE_H
+
 #include<Windows.h>
+#include"config.h"
 
 #define BLUESTACK_TEXT "BlueStacks App Player for Windows (beta-1)"
 HWND GetBluestackWindow()
@@ -12,6 +14,9 @@ HWND GetBluestackWindow()
 		if(hWnd != NULL){
 			GetWindowText(hWnd,text,100);
 			if(strcmp(text,BLUESTACK_TEXT)==0){
+				return hWnd;
+			}
+			if(text[0]=='G'){
 				return hWnd;
 			}
 		}
@@ -26,7 +31,7 @@ inline bool SetWindowsTopMost(HWND hWnd)
 
 #ifdef EASYX
 #include<Easyx.h>
-bool CaptureWindowImage(HWND hWnd,IMAGE *img)
+bool CaptureWindowImage(HWND hWnd,IMAGE *img,const config &cfg)
 {
 	RECT 	rectWindow;
 	HDC 	hdcScreen;
@@ -35,15 +40,18 @@ bool CaptureWindowImage(HWND hWnd,IMAGE *img)
 
 	if(!GetWindowRect(hWnd,&rectWindow))
 		{return false;}
-
-	W=rectWindow.right-rectWindow.left;
-	H=(rectWindow.bottom-rectWindow.top)/2;
+	int TOP=cfg.GetTop();
+	int LEFT=cfg.GetLeft();
+	int RIGHT=cfg.GetRight();
+	int DOWN=cfg.GetButtom();
+	W=RIGHT-LEFT;
+	H=DOWN-TOP;
 
 	hdcScreen	=GetDC(NULL);
 	hdcImg		=GetImageHDC(img);
 
 	Resize(img,W,H);
-	if(!BitBlt(hdcImg,0,0,W,H,hdcScreen,rectWindow.left,rectWindow.top+H-40,SRCCOPY))
+	if(!BitBlt(hdcImg,0,0,W,H,hdcScreen,rectWindow.left+LEFT,rectWindow.top+TOP,SRCCOPY))
 	{return false;}
 	
 	ReleaseDC(hWnd,hdcScreen);

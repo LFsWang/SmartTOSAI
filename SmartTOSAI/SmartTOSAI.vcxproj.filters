@@ -35,7 +35,10 @@
     <ClInclude Include="baseScreenSizeDef.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
-    <ClInclude Include="config.h">
+    <ClInclude Include="src\configFunction.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="src\config.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
   </ItemGroup>

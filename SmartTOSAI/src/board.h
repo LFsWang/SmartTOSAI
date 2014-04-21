@@ -39,6 +39,22 @@ public:
 
 #ifdef EASYX
 #include<easyx.h>
+#include<fstream>
+double cH[12][2];
+
+bool BoardInit(){
+	std::ifstream fin("color.dat");
+	if(!fin)return false;
+	for(int i=0;i<12;++i){
+		for(int j=0;j<2;++j){
+			fin>>cH[i][j];
+			if(!fin)return false;
+			if(cH[i][j]<0||cH[i][j]>360)return false;
+		}
+	}
+	return true;
+}
+
 bool loadFromImage(Board &bo,IMAGE &img)
 {
 	
@@ -73,18 +89,18 @@ bool loadFromImage(Board &bo,IMAGE &img)
 			}
 			H/=9;S/=9;V/=9;
 
-			if(H<20&&S>0.89){c=C_FILE;t=T_NORMAL;}//RED OK
-			else if((10<H&&H<32||i==0&&j==4&&80<H&&H<83) &&V>0.94){c=C_FILE;t=T_STRENGTH;}
-			else if(108<H&&H<144&&V<0.9){c=C_WOOD;t=T_NORMAL;}//GREEN
-			else if(108<H&&H<144&&V>0.9){c=C_WOOD;t=T_STRENGTH;}
-			else if(40 <H&&H<45&&V<0.9){c=C_RAY;t=T_NORMAL;}//YELLOW 41 1 0.7
-			else if(38 <H&&H<110&&V>0.9){c=C_RAY;t=T_STRENGTH;}//38~108
-			else if(325<H&&H<350&&V<0.9){c=C_HEART;t=T_NORMAL;}//HEART
-			else if(325<H&&H<350&&V>0.9){c=C_HEART;t=T_STRENGTH;}
-			else if(190<H&&H<210&&V<0.9){c=C_WATER;t=T_NORMAL;}//Blue
-			else if(150<H&&H<210&&V>0.9){c=C_WATER;t=T_STRENGTH;}
-			else if(295<H&&H<302&&V<0.9){c=C_DARK;t=T_NORMAL;}//Dark 298 0.9 0.6
-			else if(250<H&&H<295&&V>0.9){c=C_DARK;t=T_STRENGTH;}//290~255 0.36 1
+			if     (cH[0][0] <H&&H<cH[0][1] &&S>0.89){c=C_FILE;t=T_NORMAL;}//RED OK
+			else if(cH[1][0] <H&&H<cH[1][1] &&V>0.94){c=C_FILE;t=T_STRENGTH;}
+			else if(cH[2][0] <H&&H<cH[2][1] &&V<0.9){c=C_WOOD;t=T_NORMAL;}//GREEN
+			else if(cH[3][0] <H&&H<cH[3][1] &&V>0.9){c=C_WOOD;t=T_STRENGTH;}
+			else if(cH[4][0] <H&&H<cH[4][1] &&V<0.9){c=C_RAY;t=T_NORMAL;}//YELLOW 41 1 0.7
+			else if(cH[5][0] <H&&H<cH[5][1] &&V>0.9){c=C_RAY;t=T_STRENGTH;}//38~108
+			else if(cH[6][0] <H&&H<cH[6][1] &&V<0.9){c=C_HEART;t=T_NORMAL;}//HEART
+			else if(cH[7][0] <H&&H<cH[7][1] &&V>0.9){c=C_HEART;t=T_STRENGTH;}
+			else if(cH[8][0] <H&&H<cH[8][1] &&V<0.9){c=C_WATER;t=T_NORMAL;}//Blue
+			else if(cH[9][0] <H&&H<cH[9][1] &&V>0.9){c=C_WATER;t=T_STRENGTH;}
+			else if(cH[10][0]<H&&H<cH[10][1]&&V<0.9){c=C_DARK;t=T_NORMAL;}//Dark 298 0.9 0.6
+			else if(cH[11][0]<H&&H<cH[11][1]&&V>0.9){c=C_DARK;t=T_STRENGTH;}//290~255 0.36 1
 			else{
 				//Debug info
 				//setfillcolor(RED);

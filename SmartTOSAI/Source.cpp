@@ -24,7 +24,7 @@
 #include"src\BluestackCapture.h"
 #include"src\board.h"
 #include"src\Path.h"
-
+#include"src\configFunction.h"
 #include"IDAstar.h"
 using namespace std;
 
@@ -35,17 +35,34 @@ int main()
 	IMAGE img;
 	Board boardMain;
 	ostringstream oss;
+	config globalConfig;
 	int aiTImeLimit=16;
+	/*
+	Init
+	*/
+	_mkdir("img");
+	if(!BoardInit()){
+		cout<<"color.dat¿ò¥¢©Î·l·´"<<endl;
+		_getch();
+		exit(0);
+	}
+	if(!LoadConfig(globalConfig)){
+		if(!CreateConfig(globalConfig)){
+			cout<<"Config ERROR!"<<endl;
+			_getch();
+			exit(0);
+		}
+	}
 	/*
 	*	Load AI use C++ 11
 	*/
-	_mkdir("img");
+	
 	/*
 	*	Intro Massage
 	*/
 	cout<<"SmartTOSAI By LFsWang!"<<endl
 		<<"======================"<<endl
-		<<"Ver.0.21alpha"<<endl
+		<<"Ver.0.30alpha"<<endl
 		<<"Build :"<<__DATE__<<' '<<__TIME__<<endl
 		<<"======================"<<endl<<endl;
 	cout<<"Set AI Timelimit (Second) :";
@@ -59,7 +76,7 @@ int main()
 	}
 
 	cout<<"Find Bluestack"<<endl
-		<<"Please click your bluestack window to continue..."<<endl;
+		<<"Please click your TOS window to continue..."<<endl;
 
 	/*
 	*	Get BlueStack handle and set enviroment
@@ -67,7 +84,7 @@ int main()
 	hwndBluestack=GetBluestackWindow();
 	if(hwndBluestack==NULL)
 	{
-		cout<<"Error while handle Bluestack!"<<endl;pause();
+		cout<<"Error while handle Screen!"<<endl;pause();
 		exit(1);
 	}
 	if(!SetWindowsTopMost(hwndBluestack))
@@ -81,7 +98,7 @@ int main()
 	*/
 	bool Stopflag=false;
 	initgraph(500,400);
-	Sleep(3000);
+	//Sleep(3000);
 	int config[2]={0};/*TEST*/
 	while(true)
 	{
@@ -104,7 +121,7 @@ int main()
 			}
 			Stopflag=false;
 		}
-		if(!CaptureWindowImage(hwndBluestack,&img))
+		if(!CaptureWindowImage(hwndBluestack,&img,globalConfig))
 		{
 			cout<<"Some thing worng! Can\'t get screen!";
 			break;
@@ -166,7 +183,7 @@ int main()
 			//IDAStar(boardMain,&p,&posStart);
 			outtextxy(0,0,"!");
 			if(!path.empty()){
-				applyPath(hwndBluestack,boardMain,path,posStart);
+				applyPath(hwndBluestack,boardMain,path,posStart,globalConfig);
 				oss.str("");
 				oss<<"img\\"<<time(NULL)<<".bmp";
 				saveimage(oss.str().c_str());

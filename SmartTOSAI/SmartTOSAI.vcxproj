@@ -82,10 +82,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="baseScreenSizeDef.h" />
-    <ClInclude Include="config.h" />
     <ClInclude Include="IDAstar.h" />
     <ClInclude Include="src\BluestackCapture.h" />
     <ClInclude Include="src\board.h" />
+    <ClInclude Include="src\config.h" />
+    <ClInclude Include="src\configFunction.h" />
     <ClInclude Include="src\Path.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

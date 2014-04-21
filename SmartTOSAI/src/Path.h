@@ -6,6 +6,8 @@
 #include"board.h"
 #include<sstream>
 #include<easyx.h>
+#include"config.h"
+
 using std::ostringstream;
 using std::vector;
 
@@ -33,7 +35,7 @@ public:
 	}
 };
 
-bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos)
+bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos,const config &cfg)
 {
 	ostringstream oss;
 	RECT rectWin;
@@ -45,17 +47,26 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos)
 
 	if(!GetClientRect(hWnd,&rectWin))
 		return false;
-	winW=rectWin.right-rectWin.left;
-	winH=(rectWin.bottom-rectWin.top)/2;
 
+	int TOP=cfg.GetTop();
+	int LEFT=cfg.GetLeft();
+	int RIGHT=cfg.GetRight();
+	int DOWN=cfg.GetButtom();
 
+	winW=RIGHT-LEFT;
+	winH=DOWN-TOP;
+#define ImgX(X) (winW*(2*(X)-1)/12)
+#define ImgY(Y) (winH*(2*(Y)-1)/10)
+#define RealX(X) (ImgX(X)+LEFT)
+#define RealY(Y) (ImgY(Y)+TOP)
+	/*
 #define _X(X) (3+winW*(2*(X)-1)/12)
 #define _Y(Y) (int)(  winH*(2*(Y)-1)/10.0+winH-40)
 #define __Y(YY) (_Y(YY)-winH+40)
+	*/
 	antiCheat=3;
-	SendMessage(hWnd,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
-	//fillcircle(_X(pos.y),__Y(pos.x),15);
-	moveto(_X(pos.y),__Y(pos.x));
+	SendMessage(hWnd,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(RealX(pos.y),RealY(pos.x)));
+	moveto(ImgX(pos.y),ImgY(pos.x));
 	Sleep(100);
 	int fixx,fixy;
 	for(int &n:path)
@@ -70,25 +81,23 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos)
 			antiCheat--;
 			for(int p=1;p<10;++p)
 			{
-				SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y)+rand()%5-3,_Y(pos.x)+rand()%5-3));
+				SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(RealX(pos.y)+rand()%5-3,RealY(pos.x)+rand()%5-3));
 				Sleep(50);
 			}
-			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y)+fixx,_Y(pos.x)+fixy));
-			lineto(_X(pos.y)+fixx,__Y(pos.x)+fixy);
+			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(RealX(pos.y)+fixx,RealY(pos.x)+fixy));
+			lineto(ImgX(pos.y)+fixx,ImgY(pos.x)+fixy);
 		}
 		else
 		{
-			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
-			lineto(_X(pos.y),__Y(pos.x));
+			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(RealX(pos.y),RealY(pos.x)));
+			lineto(ImgX(pos.y),ImgY(pos.x));
 		}
-		Sleep(90);
+		Sleep(cfg.GetSpeed());
 	}
 	MessageBeep(MB_OK);
-	SendMessage(hWnd,WM_LBUTTONUP,MK_LBUTTON,MAKELPARAM(_X(pos.y),_Y(pos.x)));
+	SendMessage(hWnd,WM_LBUTTONUP,MK_LBUTTON,MAKELPARAM(RealX(pos.y),RealY(pos.x)));
 	return false;
-#undef _X
-#undef _Y
-#undef __Y
+
 }
 
 
