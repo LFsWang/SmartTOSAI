@@ -89,6 +89,9 @@
     <ClInclude Include="src\configFunction.h" />
     <ClInclude Include="src\Path.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="smartTOSAI.rc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

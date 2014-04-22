@@ -28,8 +28,11 @@
 #include"IDAstar.h"
 using namespace std;
 
-int main()
+int main(int argv,char *argc[])
 {
+	if(argv==2&&strcmp(argc[1],"whoami?")==0){
+		system("start http://forum.tfcis.org/?Sylveon=LFsWang");
+	}
 	srand(time(nullptr));
 	HWND hwndBluestack;
 	IMAGE img;
@@ -63,7 +66,7 @@ int main()
 	*/
 	cout<<"SmartTOSAI By LFsWang!"<<endl
 		<<"======================"<<endl
-		<<"Ver.0.30alpha"<<endl
+		<<"Ver.0.31alpha"<<endl
 		<<"Build :"<<__DATE__<<' '<<__TIME__<<endl
 		<<"======================"<<endl<<endl;
 	cout<<"Set AI Timelimit (Second) :";
@@ -229,8 +232,8 @@ int main()
 
 			if(!path.empty()){
 				applyPath(hwndBluestack,boardMain,path,posStart,globalConfig);
-				oss.str("");
-				oss<<"img\\"<<time(NULL)<<".bmp";
+				//oss.str("");
+				//oss<<"img\\"<<time(NULL)<<".bmp";
 				//saveimage(oss.str().c_str());
 				Sleep(3000);
 			}
