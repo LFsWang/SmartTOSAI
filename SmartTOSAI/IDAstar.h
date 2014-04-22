@@ -8,6 +8,7 @@
 
 #include "src\board.h"
 #include "src\Path.h"
+#include "src\config.h"
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -18,7 +19,7 @@ using namespace std;
 
 //#define MAX_GOAL 8
 int maxgoal;
-
+config *cfg;
 ostringstream oss;
 
 
@@ -37,7 +38,9 @@ inline bool userStop(){
 }
 
 bool heartFlag;
-int clacComble(Bead _B[8][8])
+unsigned int comboInfo;
+#define plusCombo(C) (comboInfo+=(1<<(C-1)*4))
+int calcCombo(Bead _B[8][8])
 {
     Bead b[8][8];
     bool flag[8][8];
@@ -67,7 +70,7 @@ int clacComble(Bead _B[8][8])
             legalComle=true;
             if(Queue[j]>=3)
             {
-				if(b[i][sum].color==C_HEART)heartFlag=true;
+				//if(b[i][sum].color==C_HEART)heartFlag=true;
                 for(int k=0;k<Queue[j];++k){
                     flag[i][sum+k]=true;
 					int rv=1;
@@ -77,8 +80,10 @@ int clacComble(Bead _B[8][8])
 					}
                     //legalComle&= !( b[i][sum+k].color== b[i-1][sum+k].color && flag[i-1][sum+k]) ;
                 }
-                if(legalComle)
+                if(legalComle){
+					plusCombo(b[i][sum].color);
                     combo++;
+				}
             }
             sum+=Queue[j];
         }
@@ -100,15 +105,18 @@ int clacComble(Bead _B[8][8])
             if(Queue[i]>=3)
             {
                 legalComle=true;
-				if(b[sum][j].color==C_HEART)heartFlag=true;
+
+				//if(b[sum][j].color==C_HEART)heartFlag=true;
                 for(int k=0;k<Queue[i];++k)
                 {
                     legalComle&= !flag[k+sum][j] && !(  b[k+sum][j].color==b[k+sum][j-1].color &&
                                                         flag[k+sum][j-1]);
                     flag[k+sum][j]=true;
                 }
-                if(legalComle)
+                if(legalComle){
+					plusCombo(b[sum][j].color);
                     combo++;
+				}
             }
 			sum+=Queue[i];
         }
@@ -128,7 +136,7 @@ int clacComble(Bead _B[8][8])
                 b[ptr--][i].color=C_EMPTY;
         }
 
-        combo+=clacComble(b);
+        combo+=calcCombo(b);
     }
     return combo;
 }
@@ -137,16 +145,43 @@ int clacComble(Bead _B[8][8])
 vector<int> * commonBest=nullptr;
 _Pos nowpos,* resolvepos=nullptr;
 int coBest;
+int coBestinfo;
+int coBestReq;
 bool HeartForce=false;
 
 inline void updateBest(vector<int> *n,int comble)
 {
-	if(HeartForce){
-		if(!heartFlag){
-			return ;
+	int delta=cfg->GetButtom()-cfg->GetTop();
+
+	bool isOK=true;
+	
+	int req=cfg->RequireCombo;
+	int now=comboInfo;
+	int nreq=0;
+	
+	for(int i=0;i<6;++i){
+		int _r=req%16;
+		int _n=now%16;
+		if(_r){
+			if(_n)nreq++;
+			else{
+				if(_r&0x2){
+					isOK=false;
+				}
+			}
 		}
+		req/=16;
+		now/=16;
 	}
 
+	if(!isOK){
+		return ;
+	}
+
+	if(nreq<coBestReq){
+		return ;
+	}
+	
 	if(comble<0)comble=-comble;
 
     if(comble<coBest)return ;
@@ -157,11 +192,52 @@ inline void updateBest(vector<int> *n,int comble)
 
     (*commonBest)=(*n);
 	coBest=comble;
+	coBestinfo=comboInfo;
+	coBestReq=nreq;
 	*resolvepos=nowpos;
 
 	oss.str("");
-	oss<<"("<<maxgoal<<")THINK : "<<coBest<<" Combo in "<<commonBest->size()<<" Steps";
-	outtextxy(0,0,oss.str().c_str());
+	oss<<"預計最大combo:"<<maxgoal<<" AI : found "<<coBest<<" Combo in "<<commonBest->size()<<" Steps  ";
+	outtextxy(0,delta,oss.str().c_str());
+
+	oss.str("");
+	oss<<"當前解:";
+	int tmp=coBestinfo;
+	for(int i=0;i<6;++i){
+		int p=tmp%16;
+		tmp/=16;
+		oss<<p<<ostr[i];
+	}
+	outtextxy(0,delta+15,oss.str().c_str());
+
+	moveto(0,delta+45);
+	outtext("要求解:");
+	
+	tmp=cfg->RequireCombo;
+	for(int i=0;i<6;++i){
+		int p=tmp%16;
+		tmp/=16;
+
+		oss.str("");
+		if(p&0x2){
+			settextcolor(WHITE);
+			oss<<'*';
+		}
+		else if(p&0x1){
+			if((coBestinfo>>4*i)&0xF)
+				settextcolor(WHITE);
+			else
+				settextcolor(LIGHTRED);
+			oss<<'+';
+		}
+		else{
+			settextcolor(BLACK);
+			oss<<'-';
+		}
+		oss<<ostr[i];
+		outtext(oss.str().c_str());
+	}
+	settextcolor(WHITE);
 }
 int mdeep;
 //if int<x : FIND GOAL
@@ -171,7 +247,9 @@ int LDFS(Board &b,_Pos &pos,int r,int deep,vector<int> *path)
     int cost,H;
 
 	heartFlag=false;
-    int comb=clacComble(b.b);
+	comboInfo=0;
+    int comb=calcCombo(b.b);
+
 	updateBest(path,comb);
 
     H=2*(maxgoal-comb);
@@ -216,17 +294,21 @@ int clacMaxGoal(const Board &b){
 	return all;
 }
 
-void IDAStar(Board &b,vector<int> *path,_Pos *pos,int *config)
+void IDAStar(Board &b,vector<int> *path,_Pos *pos,config *_cfg)
 {
 	maxgoal=clacMaxGoal(b);
 	userStopFlag=false;
+	
+	cfg=_cfg;
 
     path->clear();
     commonBest=path;
 	resolvepos=pos;
+
+	coBestinfo=0;
     coBest=0;
+	coBestReq=0;
 	/*TEST*/
-	HeartForce=(bool)config[0];
 
     vector<int> tmp;
     const int steplimit=40;

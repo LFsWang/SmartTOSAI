@@ -8,7 +8,7 @@
 using std::fstream;
 using std::endl;
 
-
+char ostr[][3]={"¤ô","¤õ","¤ì","¥ú","·t","¤ß"};
 
 class config{
 
@@ -18,6 +18,8 @@ class config{
 	int BoardRight;
 	int Speed;
 public:
+	int RequireCombo;
+	int antiCheat;
 	int GetTop()const{return BoardTop;}
 	int GetLeft()const{return BoardLeft;}
 	int GetButtom()const{return BoardButtom;}

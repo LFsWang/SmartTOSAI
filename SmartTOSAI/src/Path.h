@@ -59,12 +59,8 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos,const config &cf
 #define ImgY(Y) (winH*(2*(Y)-1)/10)
 #define RealX(X) (ImgX(X)+LEFT)
 #define RealY(Y) (ImgY(Y)+TOP)
-	/*
-#define _X(X) (3+winW*(2*(X)-1)/12)
-#define _Y(Y) (int)(  winH*(2*(Y)-1)/10.0+winH-40)
-#define __Y(YY) (_Y(YY)-winH+40)
-	*/
-	antiCheat=3;
+
+	antiCheat=cfg.antiCheat;
 	SendMessage(hWnd,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(RealX(pos.y),RealY(pos.x)));
 	moveto(ImgX(pos.y),ImgY(pos.x));
 	Sleep(100);

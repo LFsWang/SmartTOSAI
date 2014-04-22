@@ -33,7 +33,7 @@ bool LoadConfig(config &cfg){
 	if(cfg.Speed<90){
 		cfg.Speed=90;
 	}
-
+	cfg.RequireCombo=0;
 	return true;
 }
 
@@ -145,7 +145,10 @@ bool CreateConfig(config &cfg){
 		Sleep(10);
 	}
 	closegraph();
+
 	cfg.Speed=90;
+	cfg.RequireCombo=0;
+
 	cout<<"Save..."<<endl;
 	if(!SaveConfig(cfg)){
 		return false;

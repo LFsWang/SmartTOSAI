@@ -36,6 +36,7 @@ int main()
 	Board boardMain;
 	ostringstream oss;
 	config globalConfig;
+	char buffer[100];
 	int aiTImeLimit=16;
 	/*
 	Init
@@ -97,9 +98,16 @@ int main()
 	*	GUI Intro
 	*/
 	bool Stopflag=false;
-	initgraph(500,400);
-	//Sleep(3000);
-	int config[2]={0};/*TEST*/
+	initgraph(	globalConfig.GetRight()-globalConfig.GetLeft(),
+				globalConfig.GetButtom()-globalConfig.GetTop()+60);
+
+	LOGFONT fontStyle;
+	gettextstyle(&fontStyle);
+	strcpy_s(fontStyle.lfFaceName,"consolas");
+	fontStyle.lfQuality=ANTIALIASED_QUALITY;
+	settextstyle(&fontStyle);
+
+	globalConfig.antiCheat=3;
 	while(true)
 	{
 		if(Stopflag||GetAsyncKeyState(VK_ESCAPE)){
@@ -108,14 +116,53 @@ int main()
 				if(GetAsyncKeyState(VK_F1)){
 					break;
 				}
-				if(GetAsyncKeyState(VK_F5)){
-					config[0]=(config[0]+1)%2;
-					Sleep(300);
+				if(GetAsyncKeyState(VK_F2)){
+					if(globalConfig.antiCheat)globalConfig.antiCheat=0;
+					else globalConfig.antiCheat=3;
+					oss.str("");
+					oss<<"ANTI"<<globalConfig.antiCheat;
+					outtextxy(0,15,oss.str().c_str());
+					Sleep(100);
 				}
-				if(config[0]){
-					outtextxy(0,50,"Force Heart ON ");
-				}else{
-					outtextxy(0,50,"Force Heart OFF");
+				if(GetAsyncKeyState(VK_F8)){
+					BoardInit();
+					Sleep(10);
+				}
+				if(GetAsyncKeyState(VK_F5)){
+					InputBox(buffer,99,"請輸入色珠的限制，大寫為必須轉出，小寫為優先轉出\n火F水W木G光L暗D心H");
+					int result=0,tmp;
+					for(int i=0;buffer[i];++i){
+						switch(buffer[i]){
+						case 'W':result|=0x000002;
+						case 'w':result|=0x000001;break;
+						case 'F':result|=0x000020;
+						case 'f':result|=0x000010;break;
+						case 'G':result|=0x000200;
+						case 'g':result|=0x000100;break;
+						case 'L':result|=0x002000;
+						case 'l':result|=0x001000;break;
+						case 'D':result|=0x020000;
+						case 'd':result|=0x010000;break;
+						case 'H':result|=0x200000;
+						case 'h':result|=0x100000;break;
+						}
+					}
+					tmp=result;
+					oss.str("");
+					oss<<"轉珠限制：";
+					for(int i=0;i<6;++i){
+						int k=tmp%16;
+						tmp/=16;
+						if(k){
+							
+							if(k&0x2)
+								oss<<"強迫";
+							oss<<ostr[i]<<',';
+						}
+					}
+					if(MessageBox(GetHWnd(),oss.str().c_str(),"Sure?",MB_YESNO|MB_ICONQUESTION)==IDYES){
+						globalConfig.RequireCombo=result;
+					}
 				}
 				Sleep(10);
 			}
@@ -145,7 +192,7 @@ int main()
 			}
 
 			future_status::future_status taskStatus;
-			future<void> task=async(IDAStar,boardMain,&path,&posStart,config);
+			future<void> task=async(IDAStar,boardMain,&path,&posStart,&globalConfig);
 			double runtime;
 			clock_start=clock();
 			do{
@@ -153,13 +200,9 @@ int main()
 				clock_now=clock();
 				runtime=((double)clock_now-clock_start)/CLOCKS_PER_SEC;
 
-				oss.str("");
-				oss<<runtime<<"Second";
-				if(config[0]){
-					oss<<"ForceHeart : ON";
-				}
+				sprintf_s(buffer,"已思考 %.2f 秒",runtime);
+				outtextxy(0,15,buffer);
 
-				outtextxy(0,15,oss.str().c_str());
 				if(GetAsyncKeyState(VK_ESCAPE)||runtime>aiTImeLimit){
 					outtextxy(0,15,"Send Stop Signal..");
 					CloseHandle(hMutex);
@@ -173,20 +216,22 @@ int main()
 				continue;
 			}
 			task.get();
+
 			if(hMutex!=NULL){
-				//ReleaseMutex(hMutex);
 				CloseHandle(hMutex);
 			}
+
 			if(path.size()==0){
 				MessageBox(GetHWnd(),"Fail to find Path!","Error",MB_ICONERROR);
 			}
-			//IDAStar(boardMain,&p,&posStart);
-			outtextxy(0,0,"!");
+			
+			outtextxy(0,0,"Finish!");
+
 			if(!path.empty()){
 				applyPath(hwndBluestack,boardMain,path,posStart,globalConfig);
 				oss.str("");
 				oss<<"img\\"<<time(NULL)<<".bmp";
-				saveimage(oss.str().c_str());
+				//saveimage(oss.str().c_str());
 				Sleep(3000);
 			}
 		}

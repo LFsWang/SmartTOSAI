@@ -62,6 +62,7 @@ bool loadFromImage(Board &bo,IMAGE &img)
 	static int dy[]={0,7,-7,7,-7,0,0,10,-10};
 
 	ostringstream oss;
+	char strBuffer[100];
 	int winW,winH;
 	BYTE c,t;
 	float H,S,V,h,s,v;
@@ -77,9 +78,7 @@ bool loadFromImage(Board &bo,IMAGE &img)
 		{
 			int x=4+winW*(2*i-1)/12;
 			int y=  winH*(2*j-1)/10-3;
-			/*
-			*	may be it can delete max & min
-			*/
+
 			H=0;S=0;V=0;
 			for(int k=0;k<9;++k)
 			{
@@ -88,9 +87,9 @@ bool loadFromImage(Board &bo,IMAGE &img)
 				H+=h;S+=s;V+=v;
 			}
 			H/=9;S/=9;V/=9;
-
-			if     (cH[0][0] <H&&H<cH[0][1] &&S>0.89){c=C_FILE;t=T_NORMAL;}//RED OK
-			else if(cH[1][0] <H&&H<cH[1][1] &&V>0.94){c=C_FILE;t=T_STRENGTH;}
+			bool dbg=false;
+			if     (cH[0][0] <H&&H<cH[0][1] &&V<0.9){c=C_FILE;t=T_NORMAL;}//RED OK
+			else if(cH[1][0] <H&&H<cH[1][1] &&V>0.9){c=C_FILE;t=T_STRENGTH;}
 			else if(cH[2][0] <H&&H<cH[2][1] &&V<0.9){c=C_WOOD;t=T_NORMAL;}//GREEN
 			else if(cH[3][0] <H&&H<cH[3][1] &&V>0.9){c=C_WOOD;t=T_STRENGTH;}
 			else if(cH[4][0] <H&&H<cH[4][1] &&V<0.9){c=C_RAY;t=T_NORMAL;}//YELLOW 41 1 0.7
@@ -102,29 +101,20 @@ bool loadFromImage(Board &bo,IMAGE &img)
 			else if(cH[10][0]<H&&H<cH[10][1]&&V<0.9){c=C_DARK;t=T_NORMAL;}//Dark 298 0.9 0.6
 			else if(cH[11][0]<H&&H<cH[11][1]&&V>0.9){c=C_DARK;t=T_STRENGTH;}//290~255 0.36 1
 			else{
-				//Debug info
-				//setfillcolor(RED);
-				//fillcircle(x,y,10);
-				//Debug info
-				oss.str("");
-				oss<<H<<' '<<S<<' '<<V;
-				outtextxy(x,y+15*(i-3),oss.str().c_str());
-
+				dbg=true;
+				flag=false;
 				c=C_EMPTY;
 				t=T_NORMAL;
-				flag=false;
+			}
+			if(dbg||t==T_STRENGTH){
+				//Debug info
+				oss.str("");
+				sprintf_s(strBuffer,"%.2f %.2f %.2f",H,S,V);
+				oss<<strBuffer;
+				outtextxy(x,y+15*(i-3),oss.str().c_str());				
 			}
 			bo.b[j][i].color=c;
 			bo.b[j][i].type=t;
-			if(c==C_RAY&&t==T_STRENGTH){
-				setfillcolor(RED);
-				fillcircle(x,y,10);
-				if(t==T_STRENGTH)
-					outtextxy(x,y,'S');
-				oss.str("");
-				oss<<H<<' '<<S<<' '<<V;
-				outtextxy(x,y+15*(i-3),oss.str().c_str());
-			}
 		}
 	}
 	return flag;
