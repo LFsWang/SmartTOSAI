@@ -3,11 +3,13 @@
 
 
 #include<sstream>
+#include<cstdio>
 #include<iomanip>
 #include<vector>
 #include<Windows.h>
 #include<fstream>
 #include<vector>
+#include"config.h"
 /*for debug*/
 using std::ostringstream;
 
@@ -57,7 +59,7 @@ bool BoardInit(){
 
 bool loadFromImage(Board &bo,IMAGE &img)
 {
-	
+	char ostr[][3]={"¤ô","¤õ","¤ì","¥ú","·t","¤ß"};
 	static int dx[]={0,7,7,-7,-7,10,-10,0,0};
 	static int dy[]={0,7,-7,7,-7,0,0,10,-10};
 
@@ -106,12 +108,12 @@ bool loadFromImage(Board &bo,IMAGE &img)
 				c=C_EMPTY;
 				t=T_NORMAL;
 			}
-			if(dbg||t==T_STRENGTH){
+			if(dbg||t==T_STRENGTH||c>0){
 				//Debug info
-				oss.str("");
-				sprintf_s(strBuffer,"%.2f %.2f %.2f",H,S,V);
-				oss<<strBuffer;
-				outtextxy(x,y+15*(i-3),oss.str().c_str());				
+				//sprintf_s(strBuffer,"%.2f %.2f %.2f",H,S,V);
+				sprintf_s(strBuffer,"%s",ostr[c-1]);
+				//outtextxy(x,y+15*(i-3),strBuffer);
+				outtextxy(x,y,strBuffer);	
 			}
 			bo.b[j][i].color=c;
 			bo.b[j][i].type=t;

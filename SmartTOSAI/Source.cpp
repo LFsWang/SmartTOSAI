@@ -102,7 +102,7 @@ int main(int argv,char *argc[])
 	*/
 	bool Stopflag=false;
 	initgraph(	globalConfig.GetRight()-globalConfig.GetLeft(),
-				globalConfig.GetButtom()-globalConfig.GetTop()+60);
+				globalConfig.GetButtom()-globalConfig.GetTop()+120);
 
 	LOGFONT fontStyle;
 	gettextstyle(&fontStyle);
@@ -195,7 +195,11 @@ int main(int argv,char *argc[])
 			}
 
 			future_status::future_status taskStatus;
-			future<void> task=async(IDAStar,boardMain,&path,&posStart,&globalConfig);
+			future<void> task=async(IDAStar,boardMain,&path,&posStart,&globalConfig,0);
+			Board tt=boardMain;
+			vector<int> tp;
+			_Pos pp;
+			//future<void> taska=async(IDAStar,tt,&tp,&pp,&globalConfig,1);
 			double runtime;
 			clock_start=clock();
 			do{
@@ -218,12 +222,12 @@ int main(int argv,char *argc[])
 			if(Stopflag){
 				continue;
 			}
-			task.get();
-
+			
 			if(hMutex!=NULL){
 				CloseHandle(hMutex);
 			}
-
+			task.get();
+			//taska.get();
 			if(path.size()==0){
 				MessageBox(GetHWnd(),"Fail to find Path!","Error",MB_ICONERROR);
 			}

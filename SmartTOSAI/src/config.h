@@ -8,7 +8,7 @@
 using std::fstream;
 using std::endl;
 
-char ostr[][3]={"水","火","木","光","暗","心"};
+static char ostr[][3]={"水","火","木","光","暗","心"};
 
 class config{
 

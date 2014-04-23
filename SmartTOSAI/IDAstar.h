@@ -4,8 +4,8 @@
 #ifdef EASYX
 #undef EASYX
 #endif
-
-
+#define THEADMAX 2
+#define ddbg MessageBox(NULL,"","",MB_OK)
 #include "src\board.h"
 #include "src\Path.h"
 #include "src\config.h"
@@ -17,19 +17,21 @@
 #include<easyx.h>
 using namespace std;
 
-//#define MAX_GOAL 8
-int maxgoal;
-config *cfg;
-ostringstream oss;
+struct theadInfo{
+	config cfg;
+	//IDA info
+	int maxgoal;
+	_Pos nowpos;
+	char buffer[90];
+	ostringstream oss;
+	unsigned int comboInfo;
+	int MaxDeep;
+};
+theadInfo tcfg[THEADMAX];
 
-
-bool userStopFlag;
 inline bool userStop(){
-	if(userStopFlag)return true;
-	
 	HANDLE hMutex=OpenMutex(MUTEX_ALL_ACCESS,false,"_Smart_User_Wait_Flag");
 	if(hMutex==NULL){
-		userStopFlag=true;
 		return true;
 	}else{
 		CloseHandle(hMutex);
@@ -37,17 +39,15 @@ inline bool userStop(){
 	}
 }
 
-bool heartFlag;
-unsigned int comboInfo;
-#define plusCombo(C) (comboInfo+=(1<<(C-1)*4))
-int calcCombo(Bead _B[8][8])
+
+#define plusCombo(C) (tcfg[tid].comboInfo+=(1<<(C-1)*4))
+int calcCombo(Bead _B[8][8],int tid)
 {
     Bead b[8][8];
     bool flag[8][8];
     int Queue[8];
     int size,sum,combo=0;
     bool legalComle;
-    //memcpy(&b,&_B,sizeof(64)*sizeof(Bead));
 	for(int i=0;i<8;++i)
 		for(int j=0;j<8;++j)
 			b[i][j]=_B[i][j];
@@ -136,27 +136,32 @@ int calcCombo(Bead _B[8][8])
                 b[ptr--][i].color=C_EMPTY;
         }
 
-        combo+=calcCombo(b);
+        combo+=calcCombo(b,tid);
     }
     return combo;
 }
 
+struct bestInfo{
+	int numMaxCombo;
+	int ComboInfo;
+	int numBestMatch;
+	vector<int> *path;
+	_Pos *start;
+};
 
-vector<int> * commonBest=nullptr;
-_Pos nowpos,* resolvepos=nullptr;
-int coBest;
-int coBestinfo;
-int coBestReq;
-bool HeartForce=false;
+bestInfo tinfo[THEADMAX];
 
-inline void updateBest(vector<int> *n,int comble)
+
+inline void updateBest(vector<int> *n,int comble,int tid)
 {
-	int delta=cfg->GetButtom()-cfg->GetTop();
+	ostringstream &oss=tcfg[tid].oss;
 
+	int delta=tcfg[tid].cfg.GetButtom()-tcfg[tid].cfg.GetTop()+tid*45;
+	
 	bool isOK=true;
 	
-	int req=cfg->RequireCombo;
-	int now=comboInfo;
+	int req=tcfg[tid].cfg.RequireCombo;
+	int now=tcfg[tid].comboInfo;
 	int nreq=0;
 	
 	for(int i=0;i<6;++i){
@@ -177,43 +182,45 @@ inline void updateBest(vector<int> *n,int comble)
 	if(!isOK){
 		return ;
 	}
-
-	if(nreq<coBestReq){
+	//BAD
+	if(nreq<tinfo[tid].numBestMatch){
 		return ;
 	}
 	
 	if(comble<0)comble=-comble;
-
-    if(comble<coBest)return ;
-
-    if(comble==coBest){
-		if(commonBest->size()<=n->size())return ;
+	//BAD
+    if(comble<tinfo[tid].numMaxCombo)return ;
+	//BAD
+    if(comble==tinfo[tid].numMaxCombo){
+		if(tinfo[tid].path->size() <= n->size())return ;
+		//if(commonBest->size()<=n->size())return ;
 	}
+	//BAD
+    (*tinfo[tid].path)=(*n);
+	tinfo[tid].numMaxCombo=comble;
+	tinfo[tid].ComboInfo=tcfg[tid].comboInfo;
+	tinfo[tid].numBestMatch=nreq;
+	*tinfo[tid].start=tcfg[tid].nowpos;
+	//*resolvepos=nowpos;
 
-    (*commonBest)=(*n);
-	coBest=comble;
-	coBestinfo=comboInfo;
-	coBestReq=nreq;
-	*resolvepos=nowpos;
-
-	oss.str("");
-	oss<<"預計最大combo:"<<maxgoal<<" AI : found "<<coBest<<" Combo in "<<commonBest->size()<<" Steps  ";
-	outtextxy(0,delta,oss.str().c_str());
+	sprintf_s(tcfg[tid].buffer,"預計最大combo:%2d ,AI%2d 找到 %2d combo (%2d Steps)",tcfg[tid].maxgoal,tid,tinfo[tid].numMaxCombo,tinfo[tid].path->size());
+	outtextxy(0,delta,tcfg[tid].buffer);
 
 	oss.str("");
 	oss<<"當前解:";
-	int tmp=coBestinfo;
+
+	int tmp=tinfo[tid].ComboInfo;
 	for(int i=0;i<6;++i){
 		int p=tmp%16;
 		tmp/=16;
 		oss<<p<<ostr[i];
 	}
 	outtextxy(0,delta+15,oss.str().c_str());
-
-	moveto(0,delta+45);
-	outtext("要求解:");
+	//MessageBox(NULL,oss.str().c_str(),"",MB_OK);
+	//moveto(0,delta+45);
+	/*outtext("要求解:");
 	
-	tmp=cfg->RequireCombo;
+	tmp=tcfg[tid].cfg.RequireCombo;
 	for(int i=0;i<6;++i){
 		int p=tmp%16;
 		tmp/=16;
@@ -224,7 +231,7 @@ inline void updateBest(vector<int> *n,int comble)
 			oss<<'*';
 		}
 		else if(p&0x1){
-			if((coBestinfo>>4*i)&0xF)
+			if((tinfo[tid].ComboInfo>>4*i)&0xF)
 				settextcolor(WHITE);
 			else
 				settextcolor(LIGHTRED);
@@ -238,24 +245,24 @@ inline void updateBest(vector<int> *n,int comble)
 		outtext(oss.str().c_str());
 	}
 	settextcolor(WHITE);
+	*/
 }
-int mdeep;
+//int mdeep;
 //if int<x : FIND GOAL
-int LDFS(Board &b,_Pos &pos,int r,int deep,vector<int> *path)
+int LDFS(Board &b,_Pos &pos,int r,int deep,vector<int> *path,int tid)
 {
 	_Pos fin;
     int cost,H;
 
-	heartFlag=false;
-	comboInfo=0;
-    int comb=calcCombo(b.b);
+	tcfg[tid].comboInfo=0;
+    int comb=calcCombo(b.b,tid);
 
-	updateBest(path,comb);
+	updateBest(path,comb,tid);
 
-    H=2*(maxgoal-comb);
+    H=2*(tcfg[tid].maxgoal-comb);
 
     if(H<=0)		return -comb;
-    if(H+deep>mdeep)return comb;
+    if(H+deep>tcfg[tid].MaxDeep)return comb;
 	if(userStop())	return comb;
     
     for(int i=0;i<8;++i)
@@ -271,7 +278,7 @@ int LDFS(Board &b,_Pos &pos,int r,int deep,vector<int> *path)
         path->push_back(i);
         swap(b.b[fin.x][fin.y],b.b[pos.x][pos.y]);
 
-        int rt=LDFS(b,fin,rv[i],deep+cost,path);
+        int rt=LDFS(b,fin,rv[i],deep+cost,path,tid);
         if(rt<0){
                 return rt;
         }
@@ -281,7 +288,7 @@ int LDFS(Board &b,_Pos &pos,int r,int deep,vector<int> *path)
     }
     return comb;
 }
-
+//OK
 int clacMaxGoal(const Board &b){
 	int c[7]={0};
 	for(int i=1;i<=5;++i)
@@ -294,32 +301,35 @@ int clacMaxGoal(const Board &b){
 	return all;
 }
 
-void IDAStar(Board &b,vector<int> *path,_Pos *pos,config *_cfg)
+void IDAStar(Board &b,vector<int> *path,_Pos *pos,config *_cfg,int tid)//,int tread,int range*,int size)
 {
-	maxgoal=clacMaxGoal(b);
-	userStopFlag=false;
 	
-	cfg=_cfg;
+	tcfg[tid].maxgoal=clacMaxGoal(b);
+	
+	tcfg[tid].cfg=*_cfg;
 
     path->clear();
-    commonBest=path;
-	resolvepos=pos;
+    tinfo[tid].path=path;
+	tinfo[tid].start=pos;
 
-	coBestinfo=0;
-    coBest=0;
-	coBestReq=0;
+	tinfo[tid].ComboInfo=0;
+    tinfo[tid].numBestMatch=0;
+	tinfo[tid].numMaxCombo=0;
 	/*TEST*/
 
     vector<int> tmp;
     const int steplimit=40;
-    for(mdeep=3;mdeep<steplimit;mdeep+=3)
+	int &deep=tcfg[tid].MaxDeep;
+    for(deep=3;deep<steplimit;deep+=3)
     {
-        for(int i=29;i>=0;--i)
+		for(int i=tid;i<30;i++)
+        //for(int i=29;i>=0;--i)
         {
-            nowpos=_Pos(1+i/6,1+i%5);
+            tcfg[tid].nowpos=_Pos(1+i/6,1+i%5);
             tmp.clear();
-            int rt=LDFS(b,nowpos,-1,0,&tmp);
+            int rt=LDFS(b,tcfg[tid].nowpos,-1,0,&tmp,tid);
             if(rt<0||userStop()){
+				
                 goto FINISH;
             }
         }
