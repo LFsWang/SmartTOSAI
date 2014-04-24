@@ -41,6 +41,7 @@ int main(int argv,char *argc[])
 	config globalConfig;
 	char buffer[100];
 	int aiTImeLimit=16;
+	int treadnum=2;
 	/*
 	Init
 	*/
@@ -180,13 +181,18 @@ int main(int argv,char *argc[])
 		putimage(0,0,&img);
 		if(loadFromImage(boardMain,img))
 		{
-			vector<int> path;
-			_Pos posStart;
+			outtextxy(0,0,"THINK...");
+
+			vector<int> path[THEADMAX];
+			_Pos posStart[THEADMAX];
+			Board AIboard[THEADMAX];
+			future<int> task[THEADMAX];
+			future_status::future_status taskStatus;
+
 			HANDLE hMutex;
 			time_t clock_start;
 			time_t clock_now;
 			int flag=0;
-			outtextxy(0,0,"THINK...");
 
 			hMutex=CreateMutex(NULL,false,"_Smart_User_Wait_Flag");
 			if(GetLastError() == ERROR_ALREADY_EXISTS){
@@ -194,48 +200,73 @@ int main(int argv,char *argc[])
 				continue ;
 			}
 
-			future_status::future_status taskStatus;
-			future<void> task=async(IDAStar,boardMain,&path,&posStart,&globalConfig,0);
-			Board tt=boardMain;
-			vector<int> tp;
-			_Pos pp;
-			//future<void> taska=async(IDAStar,tt,&tp,&pp,&globalConfig,1);
+			//future<int> task=async(IDAStar,boardMain,&path,&posStart,&globalConfig,0);
+			for(int i=0;i<treadnum;++i){
+				AIboard[i]=boardMain;
+				task[i]=async(IDAStar,AIboard[i],&path[i],&posStart[i],&globalConfig,i);
+			}
+
 			double runtime;
 			clock_start=clock();
 			do{
-				taskStatus = task.wait_for(std::chrono::milliseconds(100));
+				flag=0;
+				for(int i=0;i<treadnum;++i){
+					taskStatus = task[i].wait_for(std::chrono::milliseconds(0));
+					if(taskStatus == future_status::ready){
+						flag=1;
+					}
+				}
+				
 				clock_now=clock();
 				runtime=((double)clock_now-clock_start)/CLOCKS_PER_SEC;
-
 				sprintf_s(buffer,"¤w«ä¦Ò %.2f ¬í",runtime);
 				outtextxy(0,15,buffer);
 
-				if(GetAsyncKeyState(VK_ESCAPE)||runtime>aiTImeLimit){
+				if(runtime>aiTImeLimit){
 					outtextxy(0,15,"Send Stop Signal..");
-					CloseHandle(hMutex);
-					hMutex=NULL;
-					if(runtime<=aiTImeLimit){
-						Stopflag=true;
-					}
+					flag=1;
 				}
-			}while(taskStatus != future_status::ready);
+				if(GetAsyncKeyState(VK_ESCAPE)){
+					outtextxy(0,15,"Send Stop Signal..");
+					flag=-1;
+					Stopflag=true;
+				}
+				Sleep(50);
+			}while(flag==0);
+
+			if(hMutex!=NULL){
+				CloseHandle(hMutex);
+				hMutex=NULL;
+			}
+
 			if(Stopflag){
 				continue;
 			}
 			
-			if(hMutex!=NULL){
-				CloseHandle(hMutex);
-			}
-			task.get();
-			//taska.get();
-			if(path.size()==0){
-				MessageBox(GetHWnd(),"Fail to find Path!","Error",MB_ICONERROR);
+			int tmpc,MaxC=task[0].get(),use=0;
+			for(int i=1;i<treadnum;++i){
+				tmpc=task[i].get();
+				if(tmpc>MaxC){
+					path[0]=path[i];
+					posStart[0]=posStart[i];
+					use=i;
+				}
 			}
 			
-			outtextxy(0,0,"Finish!");
+			
+			
+			//taska.get();
+			if(path[0].size()==0){
+				MessageBox(GetHWnd(),"Fail to find Path!","Error",MB_ICONERROR);
+				continue;
+			}
 
-			if(!path.empty()){
-				applyPath(hwndBluestack,boardMain,path,posStart,globalConfig);
+			oss.str("");
+			oss<<"Finish! use AI "<<use<<endl;
+			outtextxy(0,0,oss.str().c_str());
+
+			if(!path[0].empty()){
+				applyPath(hwndBluestack,boardMain,path[0],posStart[0],globalConfig);
 				//oss.str("");
 				//oss<<"img\\"<<time(NULL)<<".bmp";
 				//saveimage(oss.str().c_str());

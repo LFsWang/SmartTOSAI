@@ -59,7 +59,7 @@ bool BoardInit(){
 
 bool loadFromImage(Board &bo,IMAGE &img)
 {
-	char ostr[][3]={"水","火","木","光","暗","心"};
+	char ostr[][3]={"","水","火","木","光","暗","心"};
 	static int dx[]={0,7,7,-7,-7,10,-10,0,0};
 	static int dy[]={0,7,-7,7,-7,0,0,10,-10};
 
@@ -111,7 +111,7 @@ bool loadFromImage(Board &bo,IMAGE &img)
 			if(dbg||t==T_STRENGTH||c>0){
 				//Debug info
 				//sprintf_s(strBuffer,"%.2f %.2f %.2f",H,S,V);
-				sprintf_s(strBuffer,"%s",ostr[c-1]);
+				sprintf_s(strBuffer,"%s",ostr[c]);
 				//outtextxy(x,y+15*(i-3),strBuffer);
 				outtextxy(x,y,strBuffer);	
 			}

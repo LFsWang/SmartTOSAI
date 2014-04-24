@@ -301,7 +301,7 @@ int clacMaxGoal(const Board &b){
 	return all;
 }
 
-void IDAStar(Board &b,vector<int> *path,_Pos *pos,config *_cfg,int tid)//,int tread,int range*,int size)
+int IDAStar(Board &b,vector<int> *path,_Pos *pos,config *_cfg,int tid)
 {
 	
 	tcfg[tid].maxgoal=clacMaxGoal(b);
@@ -322,19 +322,28 @@ void IDAStar(Board &b,vector<int> *path,_Pos *pos,config *_cfg,int tid)//,int tr
 	int &deep=tcfg[tid].MaxDeep;
     for(deep=3;deep<steplimit;deep+=3)
     {
-		for(int i=tid;i<30;i++)
-        //for(int i=29;i>=0;--i)
-        {
-            tcfg[tid].nowpos=_Pos(1+i/6,1+i%5);
-            tmp.clear();
-            int rt=LDFS(b,tcfg[tid].nowpos,-1,0,&tmp,tid);
-            if(rt<0||userStop()){
-				
-                goto FINISH;
-            }
-        }
+		if(tid==0){
+			for(int i=0;i<15;i++){
+				tcfg[tid].nowpos=_Pos(1+i/6,1+i%5);
+				tmp.clear();
+				int rt=LDFS(b,tcfg[tid].nowpos,-1,0,&tmp,tid);
+				if(rt<0||userStop()){	
+					goto FINISH;
+				}
+			}
+		}else{
+			for(int i=29;i>=15;i--){
+				tcfg[tid].nowpos=_Pos(1+i/6,1+i%5);
+				tmp.clear();
+				int rt=LDFS(b,tcfg[tid].nowpos,-1,0,&tmp,tid);
+				if(rt<0||userStop()){	
+					goto FINISH;
+				}
+			}
+		}
     }
-    FINISH:;
+FINISH:;
+	return tinfo[tid].numMaxCombo;
 }
 
 
