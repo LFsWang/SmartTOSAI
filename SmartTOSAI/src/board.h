@@ -2,14 +2,18 @@
 #define _BOARD_H
 
 
-#include<sstream>
-#include<cstdio>
-#include<iomanip>
-#include<vector>
+
 #include<Windows.h>
+#include<sstream>
+#include<iomanip>
 #include<fstream>
+
+#include<cstdio>
 #include<vector>
+#include<cmath>
+
 #include"config.h"
+
 /*for debug*/
 using std::ostringstream;
 
@@ -39,13 +43,13 @@ public:
 };
 
 
+
 #ifdef EASYX
 #include<easyx.h>
-#include<fstream>
 double cH[12][2];
 
 bool BoardInit(){
-	std::ifstream fin("color.dat");
+	std::ifstream fin("cfg\\color.dat");
 	if(!fin)return false;
 	for(int i=0;i<12;++i){
 		for(int j=0;j<2;++j){
@@ -54,12 +58,36 @@ bool BoardInit(){
 			if(cH[i][j]<0||cH[i][j]>360)return false;
 		}
 	}
+	fin.close();
 	return true;
 }
 
-bool loadFromImage(Board &bo,IMAGE &img)
+void GetPointColorXY(int rx,int ry,config &cfg,float &h,float &s,float &v){
+	int winW=cfg.GetRight()-cfg.GetLeft();
+	int winH=cfg.GetButtom()-cfg.GetTop();
+	int x=winW*(2*rx-1)/12;
+	int y=winH*(2*ry-1)/10;
+	int dx,dy;
+	double r=(winW/12.0)*0.25;
+	float _H,_S,_V;
+	const int samplenum=60;
+	h=s=v=0;
+	COLORREF color;
+	for(int i=0;i<samplenum;++i){
+		dx=r*std::cos(M_PI*2*i/samplenum);
+		dy=r*std::sin(M_PI*2*i/samplenum);
+		color=getpixel(x+dx,y+dy);
+		RGBtoHSV(color,&_H,&_S,&_V);
+		h+=_H;s+=_S;v+=_V;
+		putpixel(x+dx,y+dy,LIGHTRED);
+	}
+	h/=samplenum;s/=samplenum;v/=samplenum;
+}
+
+bool loadFromImage(Board &bo,IMAGE &img,config &cfg)
 {
 	char ostr[][3]={"","水","火","木","光","暗","心"};
+	char tstr[][3]={"","強","風"};
 	static int dx[]={0,7,7,-7,-7,10,-10,0,0};
 	static int dy[]={0,7,-7,7,-7,0,0,10,-10};
 
@@ -67,7 +95,7 @@ bool loadFromImage(Board &bo,IMAGE &img)
 	char strBuffer[100];
 	int winW,winH;
 	BYTE c,t;
-	float H,S,V,h,s,v;
+	float H,S,V;
 	
 	bool flag=true;
 
@@ -82,14 +110,8 @@ bool loadFromImage(Board &bo,IMAGE &img)
 			int y=  winH*(2*j-1)/10-3;
 
 			H=0;S=0;V=0;
-			for(int k=0;k<9;++k)
-			{
-				COLORREF c=getpixel(x+dx[k],y+dy[k]);
-				RGBtoHSV(c,&h,&s,&v);
-				H+=h;S+=s;V+=v;
-			}
-			H/=9;S/=9;V/=9;
-			bool dbg=false;
+			GetPointColorXY(i,j,cfg,H,S,V);
+			//test
 			if     (cH[0][0] <H&&H<cH[0][1] &&V<0.9){c=C_FILE;t=T_NORMAL;}//RED OK
 			else if(cH[1][0] <H&&H<cH[1][1] &&V>0.9){c=C_FILE;t=T_STRENGTH;}
 			else if(cH[2][0] <H&&H<cH[2][1] &&V<0.9){c=C_WOOD;t=T_NORMAL;}//GREEN
@@ -99,22 +121,23 @@ bool loadFromImage(Board &bo,IMAGE &img)
 			else if(cH[6][0] <H&&H<cH[6][1] &&V<0.9){c=C_HEART;t=T_NORMAL;}//HEART
 			else if(cH[7][0] <H&&H<cH[7][1] &&V>0.9){c=C_HEART;t=T_STRENGTH;}
 			else if(cH[8][0] <H&&H<cH[8][1] &&V<0.9){c=C_WATER;t=T_NORMAL;}//Blue
-			else if(cH[9][0] <H&&H<cH[9][1] &&V>0.9){c=C_WATER;t=T_STRENGTH;}
+			else if(cH[9][0] <H&&H<cH[9][1] &&V>0.9&&S>0.35){c=C_WATER;t=T_STRENGTH;}
 			else if(cH[10][0]<H&&H<cH[10][1]&&V<0.9){c=C_DARK;t=T_NORMAL;}//Dark 298 0.9 0.6
 			else if(cH[11][0]<H&&H<cH[11][1]&&V>0.9){c=C_DARK;t=T_STRENGTH;}//290~255 0.36 1
 			else{
-				dbg=true;
 				flag=false;
 				c=C_EMPTY;
 				t=T_NORMAL;
 			}
-			if(dbg||t==T_STRENGTH||c>0){
-				//Debug info
-				//sprintf_s(strBuffer,"%.2f %.2f %.2f",H,S,V);
-				sprintf_s(strBuffer,"%s",ostr[c]);
-				//outtextxy(x,y+15*(i-3),strBuffer);
-				outtextxy(x,y,strBuffer);	
+
+
+			if(c==C_EMPTY){
+				sprintf_s(strBuffer,"%.1f %.2f",H,S);
+			}else{
+				sprintf_s(strBuffer,"%s%s",tstr[t],ostr[c]);
 			}
+			outtextxy(x,y,strBuffer);	
+
 			bo.b[j][i].color=c;
 			bo.b[j][i].type=t;
 		}

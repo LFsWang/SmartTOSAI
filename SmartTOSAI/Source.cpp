@@ -6,6 +6,7 @@
 #endif
 
 #define EASYX
+#define _USE_MATH_DEFINES
 
 #include<cstdio>
 #include<iostream>
@@ -28,11 +29,17 @@
 #include"IDAstar.h"
 using namespace std;
 
+
+
 int main(int argv,char *argc[])
 {
 	if(argv==2&&strcmp(argc[1],"whoami?")==0){
-		system("start http://forum.tfcis.org/?Sylveon=LFsWang");
+		initgraph(245,350);
+		loadimage(NULL,"IMAGE",MAKEINTRESOURCE(130));
+		_getch();
+		closegraph();
 	}
+
 	srand(time(nullptr));
 	HWND hwndBluestack;
 	IMAGE img;
@@ -41,22 +48,29 @@ int main(int argv,char *argc[])
 	config globalConfig;
 	char buffer[100];
 	int aiTImeLimit=16;
-	int treadnum=2;
+	int Threadnum=1;
 	/*
 	Init
 	*/
-	_mkdir("img");
+	_mkdir("cfg");
 	if(!BoardInit()){
 		cout<<"color.dat遺失或損毀"<<endl;
 		_getch();
 		exit(0);
 	}
+
 	if(!LoadConfig(globalConfig)){
 		if(!CreateConfig(globalConfig)){
 			cout<<"Config ERROR!"<<endl;
 			_getch();
 			exit(0);
 		}
+	}
+
+	if(!AIInit(globalConfig)){
+		cout<<"配置檔 cfg\\"<<globalConfig.GetThread()<<'t'<<globalConfig.GetThreadMothed()<<".txt 遺失"<<endl;
+		_getch();
+		exit(0);
 	}
 	/*
 	*	Load AI use C++ 11
@@ -65,11 +79,17 @@ int main(int argv,char *argc[])
 	/*
 	*	Intro Massage
 	*/
-	cout<<"SmartTOSAI By LFsWang!"<<endl
-		<<"======================"<<endl
-		<<"Ver.0.31alpha"<<endl
-		<<"Build :"<<__DATE__<<' '<<__TIME__<<endl
-		<<"======================"<<endl<<endl;
+	cout<<"         SmartTOSAI By LFsWang!    "<<endl
+		<<"==================================="<<endl
+		<<"      Ver.0.4alpha    "<<endl
+		<<"Build  :"<<__DATE__<<' '<<__TIME__<<endl
+		<<"Thread :"<<globalConfig.GetThread()<<endl
+		<<"Method :"<<globalConfig.GetThreadMothed()<<endl
+		<<endl
+		<<"       本作品由LFsWang開發製作"<<endl
+		<<"   授權方法：CC - 姓名標示─非商業性"<<endl
+		<<"    開發時須保留whoami?及本頁資訊"<<endl
+		<<"==================================="<<endl<<endl;
 	cout<<"Set AI Timelimit (Second) :";
 	cin>>aiTImeLimit;
 
@@ -79,7 +99,7 @@ int main(int argv,char *argc[])
 		cout<<"setting error. use default 16sec"<<endl;
 		aiTImeLimit=16;
 	}
-
+	
 	cout<<"Find Bluestack"<<endl
 		<<"Please click your TOS window to continue..."<<endl;
 
@@ -103,7 +123,7 @@ int main(int argv,char *argc[])
 	*/
 	bool Stopflag=false;
 	initgraph(	globalConfig.GetRight()-globalConfig.GetLeft(),
-				globalConfig.GetButtom()-globalConfig.GetTop()+120);
+				globalConfig.GetButtom()-globalConfig.GetTop()+45*globalConfig.GetThread());
 
 	LOGFONT fontStyle;
 	gettextstyle(&fontStyle);
@@ -112,11 +132,14 @@ int main(int argv,char *argc[])
 	settextstyle(&fontStyle);
 
 	globalConfig.antiCheat=3;
+	globalConfig.fiveUp=false;
+	Threadnum=globalConfig.GetThread();
+
 	while(true)
 	{
 		if(Stopflag||GetAsyncKeyState(VK_ESCAPE)){
 			while(true){
-				outtextxy(0,0,"Locked! Press F1 to continue...");
+				outtextxy(0,0,"Locked! Press F1 to continue... (F5 setting)");
 				if(GetAsyncKeyState(VK_F1)){
 					break;
 				}
@@ -133,8 +156,9 @@ int main(int argv,char *argc[])
 					Sleep(10);
 				}
 				if(GetAsyncKeyState(VK_F5)){
-					InputBox(buffer,99,"請輸入色珠的限制，大寫為必須轉出，小寫為優先轉出\n火F水W木G光L暗D心H");
+					InputBox(buffer,99,"請輸入色珠的限制，大寫為必須轉出，小寫為優先轉出\n火F水W木G光L暗D心H\n5可全體珠(暫時無法指定哪一色)");
 					int result=0,tmp;
+					globalConfig.fiveUp=false;
 					for(int i=0;buffer[i];++i){
 						switch(buffer[i]){
 						case 'W':result|=0x000002;
@@ -149,6 +173,7 @@ int main(int argv,char *argc[])
 						case 'd':result|=0x010000;break;
 						case 'H':result|=0x200000;
 						case 'h':result|=0x100000;break;
+						case '5':globalConfig.fiveUp=true;break;
 						}
 					}
 					tmp=result;
@@ -164,6 +189,9 @@ int main(int argv,char *argc[])
 							oss<<ostr[i]<<',';
 						}
 					}
+					if(globalConfig.fiveUp){
+						oss<<"5連珠";
+					}
 					if(MessageBox(GetHWnd(),oss.str().c_str(),"Sure?",MB_YESNO|MB_ICONQUESTION)==IDYES){
 						globalConfig.RequireCombo=result;
 					}
@@ -172,6 +200,7 @@ int main(int argv,char *argc[])
 			}
 			Stopflag=false;
 		}
+
 		if(!CaptureWindowImage(hwndBluestack,&img,globalConfig))
 		{
 			cout<<"Some thing worng! Can\'t get screen!";
@@ -179,14 +208,14 @@ int main(int argv,char *argc[])
 		}
 		cleardevice();
 		putimage(0,0,&img);
-		if(loadFromImage(boardMain,img))
+		if(loadFromImage(boardMain,img,globalConfig))
 		{
 			outtextxy(0,0,"THINK...");
 
-			vector<int> path[THEADMAX];
-			_Pos posStart[THEADMAX];
-			Board AIboard[THEADMAX];
-			future<int> task[THEADMAX];
+			vector<int> path[THREADMAX];
+			_Pos posStart[THREADMAX];
+			Board AIboard[THREADMAX];
+			future<int> task[THREADMAX];
 			future_status::future_status taskStatus;
 
 			HANDLE hMutex;
@@ -201,7 +230,7 @@ int main(int argv,char *argc[])
 			}
 
 			//future<int> task=async(IDAStar,boardMain,&path,&posStart,&globalConfig,0);
-			for(int i=0;i<treadnum;++i){
+			for(int i=0;i<Threadnum;++i){
 				AIboard[i]=boardMain;
 				task[i]=async(IDAStar,AIboard[i],&path[i],&posStart[i],&globalConfig,i);
 			}
@@ -210,7 +239,7 @@ int main(int argv,char *argc[])
 			clock_start=clock();
 			do{
 				flag=0;
-				for(int i=0;i<treadnum;++i){
+				for(int i=0;i<Threadnum;++i){
 					taskStatus = task[i].wait_for(std::chrono::milliseconds(0));
 					if(taskStatus == future_status::ready){
 						flag=1;
@@ -244,18 +273,15 @@ int main(int argv,char *argc[])
 			}
 			
 			int tmpc,MaxC=task[0].get(),use=0;
-			for(int i=1;i<treadnum;++i){
+			for(int i=1;i<Threadnum;++i){
 				tmpc=task[i].get();
-				if(tmpc>MaxC){
+				if(tmpc>MaxC || tmpc==MaxC && path[0].size()>path[i].size()){
 					path[0]=path[i];
 					posStart[0]=posStart[i];
 					use=i;
 				}
 			}
 			
-			
-			
-			//taska.get();
 			if(path[0].size()==0){
 				MessageBox(GetHWnd(),"Fail to find Path!","Error",MB_ICONERROR);
 				continue;
@@ -267,10 +293,7 @@ int main(int argv,char *argc[])
 
 			if(!path[0].empty()){
 				applyPath(hwndBluestack,boardMain,path[0],posStart[0],globalConfig);
-				//oss.str("");
-				//oss<<"img\\"<<time(NULL)<<".bmp";
-				//saveimage(oss.str().c_str());
-				Sleep(3000);
+				Sleep(5000);
 			}
 		}
 		Sleep(1000);

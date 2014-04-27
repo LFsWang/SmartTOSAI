@@ -75,10 +75,10 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos,const config &cf
 		if(n<4&&rand()%4==0&&antiCheat)
 		{
 			antiCheat--;
-			for(int p=1;p<10;++p)
+			for(int p=1;p<5;++p)
 			{
 				SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(RealX(pos.y)+rand()%5-3,RealY(pos.x)+rand()%5-3));
-				Sleep(50);
+				Sleep(90+rand()%20);
 			}
 			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(RealX(pos.y)+fixx,RealY(pos.x)+fixy));
 			lineto(ImgX(pos.y)+fixx,ImgY(pos.x)+fixy);
@@ -88,7 +88,7 @@ bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos,const config &cf
 			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(RealX(pos.y),RealY(pos.x)));
 			lineto(ImgX(pos.y),ImgY(pos.x));
 		}
-		Sleep(cfg.GetSpeed());
+		Sleep(cfg.GetSpeed()+rand()%10);
 	}
 	MessageBeep(MB_OK);
 	SendMessage(hWnd,WM_LBUTTONUP,MK_LBUTTON,MAKELPARAM(RealX(pos.y),RealY(pos.x)));

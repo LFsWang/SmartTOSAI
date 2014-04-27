@@ -24,6 +24,7 @@ HWND GetBluestackWindow()
 	}while(true);
 	return NULL;
 }
+
 inline bool SetWindowsTopMost(HWND hWnd)
 {
 	return SetWindowPos(hWnd,HWND_TOPMOST,0,0,0,0,SWP_NOSIZE|SWP_NOMOVE);

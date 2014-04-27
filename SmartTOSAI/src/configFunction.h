@@ -13,7 +13,7 @@ using std::endl;
 using std::cout;
 using std::cin;
 
-#define CONFIGFILEURL "smartTosAi.cfg"
+#define CONFIGFILEURL "cfg\\smartTosAi.cfg"
 
 bool LoadConfig(config &cfg){
 	fstream fin;
@@ -30,8 +30,15 @@ bool LoadConfig(config &cfg){
 	if(cfg.BoardRight-cfg.BoardLeft<=0||cfg.BoardButtom-cfg.BoardTop<=0)return false;
 	
 	fin>>cfg.Speed;
+	if(!fin)return false;
 	if(cfg.Speed<90){
 		cfg.Speed=90;
+	}
+
+	fin>>cfg.Thread>>cfg.ThreadMothed;
+	if(!fin)return false;
+	if(cfg.Thread<0||cfg.Thread>4){
+		cfg.Thread=1;
 	}
 	cfg.RequireCombo=0;
 	return true;
@@ -48,6 +55,7 @@ bool SaveConfig(config &cfg){
 	//Screen Fix Setting
 	fout<<cfg.BoardLeft<<' '<<cfg.BoardTop<<' '<<cfg.BoardRight<<' '<<cfg.BoardButtom<<endl;
 	fout<<cfg.Speed<<endl;
+	fout<<cfg.Thread<<' '<<cfg.ThreadMothed<<endl;
 	return true;
 }
 
@@ -69,7 +77,7 @@ bool CreateConfig(config &cfg){
 	FinishFlag=false;
 	cfg.BoardLeft=0;
 	cfg.BoardTop=250;
-	EasyXWindow=initgraph(500,500);
+	EasyXWindow=initgraph(600,600);
 	MessageBox(EasyXWindow,"Step1.調整左上角，使用ADWS移動，使用Q保存設定","SmartTOSAI",MB_ICONINFORMATION);
 	while(!FinishFlag){
 		cfg.BoardRight=cfg.BoardLeft+300;
@@ -146,8 +154,10 @@ bool CreateConfig(config &cfg){
 	}
 	closegraph();
 
-	cfg.Speed=90;
+	cfg.Speed=120;
 	cfg.RequireCombo=0;
+	cfg.Thread=2;
+	cfg.ThreadMothed=1;
 
 	cout<<"Save..."<<endl;
 	if(!SaveConfig(cfg)){
