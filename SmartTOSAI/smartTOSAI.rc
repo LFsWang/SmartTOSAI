@@ -11,8 +11,8 @@ EGG IMAGE DISCARDABLE "egg.jpg"
 // TO CHANGE VERSION INFORMATION, EDIT PROJECT OPTIONS...
 //
 1 VERSIONINFO
-FILEVERSION 0,4,0,1
-PRODUCTVERSION 0,4,0,1
+FILEVERSION 0,4,1,0
+PRODUCTVERSION 0,4,1,0
 
 FILETYPE VFT_APP
 {
@@ -21,14 +21,14 @@ FILETYPE VFT_APP
     BLOCK "040904E4"
     {
       VALUE "CompanyName", ""
-      VALUE "FileVersion", "0.4.0.1alpha"
+      VALUE "FileVersion", "0.4.1.0alpha"
       VALUE "FileDescription", "Developed By LFsWang"
       VALUE "InternalName", ""
       VALUE "LegalCopyright", "CC - 姓名標示─非商業性"
       VALUE "LegalTrademarks", ""
       VALUE "OriginalFilename", ""
       VALUE "ProductName", "Smart TOS AI"
-      VALUE "ProductVersion", "0.4.0.1alpha"
+      VALUE "ProductVersion", "0.4.1.0alpha"
     }
   }
   BLOCK "VarFileInfo"

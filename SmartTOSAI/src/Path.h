@@ -34,68 +34,88 @@ public:
 		return true;
 	}
 };
+//Global
+int TOP;
+int LEFT;
+int RIGHT;
+int DOWN;
+int winW,winH;
 
-bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos,const config &cfg)
-{
-	ostringstream oss;
-	RECT rectWin;
-	int antiCheat;
-	int winW,winH;
-	int tmp=0;
-	setlinestyle(PS_SOLID,6);
-	setlinecolor(YELLOW);
-
-	if(!GetClientRect(hWnd,&rectWin))
-		return false;
-
-	int TOP=cfg.GetTop();
-	int LEFT=cfg.GetLeft();
-	int RIGHT=cfg.GetRight();
-	int DOWN=cfg.GetButtom();
-
-	winW=RIGHT-LEFT;
-	winH=DOWN-TOP;
 #define ImgX(X) (winW*(2*(X)-1)/12)
 #define ImgY(Y) (winH*(2*(Y)-1)/10)
 #define RealX(X) (ImgX(X)+LEFT)
 #define RealY(Y) (ImgY(Y)+TOP)
 
+//Init
+bool PathInit(config &cfg)
+{
+	TOP=cfg.GetTop();
+	LEFT=cfg.GetLeft();
+	RIGHT=cfg.GetRight();
+	DOWN=cfg.GetButtom();
+	winW=RIGHT-LEFT;
+	winH=DOWN-TOP;
+	return true;
+}
+//move function
+inline void mouseDown(HWND hWnd,int x,int y)
+{
+	SendMessage(hWnd,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(x,y));
+	moveto(x-LEFT,y-TOP);
+	fillcircle(x-LEFT,y-TOP,5);
+}
+inline void mouseRelease(HWND hWnd,int x,int y)
+{
+	SendMessage(hWnd,WM_LBUTTONUP,MK_LBUTTON,MAKELPARAM(x,y));
+	fillcircle(x-LEFT,y-TOP,5);
+}
+inline void mouseMove(HWND hWnd,int x,int y)
+{
+	SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(x,y));
+	lineto(x-LEFT,y-TOP);
+}
+bool applyPath(HWND hWnd ,Board &bd,vector<int> &path,_Pos &pos,const config &cfg)
+{
+	int antiCheat;
+	int tmp=0;
+	int fixx,fixy;
+
+	setlinestyle(PS_SOLID,6);
+	setlinecolor(YELLOW);
+
 	antiCheat=cfg.antiCheat;
-	SendMessage(hWnd,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(RealX(pos.y),RealY(pos.x)));
+
+	mouseDown(hWnd,RealX(pos.y),RealY(pos.x));
+	Sleep(100);
 	moveto(ImgX(pos.y),ImgY(pos.x));
 	Sleep(100);
-	int fixx,fixy;
+
+	
 	for(int &n:path)
 	{
 		tmp+=9;
 		setlinecolor(YELLOW-tmp);
-		fixx=rand()%5-1;
-		fixy=rand()%5-1;
+		fixx=rand()%9-4;
+		fixy=rand()%9-4;
 		pos.apply(n);
 		if(n<4&&rand()%4==0&&antiCheat)
 		{
 			antiCheat--;
-			for(int p=1;p<5;++p)
+			for(int p=1;p<7;++p)
 			{
-				SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(RealX(pos.y)+rand()%5-3,RealY(pos.x)+rand()%5-3));
-				Sleep(90+rand()%20);
+				mouseMove(hWnd,RealX(pos.y)+rand()%5-3,RealY(pos.x)+rand()%5-3);
+				Sleep(60+rand()%40);
 			}
-			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(RealX(pos.y)+fixx,RealY(pos.x)+fixy));
-			lineto(ImgX(pos.y)+fixx,ImgY(pos.x)+fixy);
+			mouseMove(hWnd,RealX(pos.y)+fixx,RealY(pos.x)+fixy);
 		}
 		else
 		{
-			SendMessage(hWnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(RealX(pos.y),RealY(pos.x)));
-			lineto(ImgX(pos.y),ImgY(pos.x));
+			mouseMove(hWnd,RealX(pos.y),RealY(pos.x));
 		}
 		Sleep(cfg.GetSpeed()+rand()%10);
 	}
+	mouseRelease(hWnd,RealX(pos.y),RealY(pos.x));
 	MessageBeep(MB_OK);
-	SendMessage(hWnd,WM_LBUTTONUP,MK_LBUTTON,MAKELPARAM(RealX(pos.y),RealY(pos.x)));
-	return false;
-
+	return true;
 }
-
-
-
 #endif

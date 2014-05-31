@@ -72,16 +72,19 @@ int main(int argv,char *argc[])
 		_getch();
 		exit(0);
 	}
-	/*
-	*	Load AI use C++ 11
-	*/
-	
+
+	if(!PathInit(globalConfig)){
+		//Always true
+		cout<<"Path Error"<<endl;
+		_getch();
+		exit(0);
+	}
 	/*
 	*	Intro Massage
 	*/
 	cout<<"         SmartTOSAI By LFsWang!    "<<endl
 		<<"==================================="<<endl
-		<<"      Ver.0.4alpha    "<<endl
+		<<"      Ver.0.4.1alpha    "<<endl
 		<<"Build  :"<<__DATE__<<' '<<__TIME__<<endl
 		<<"Thread :"<<globalConfig.GetThread()<<endl
 		<<"Method :"<<globalConfig.GetThreadMothed()<<endl
@@ -96,8 +99,8 @@ int main(int argv,char *argc[])
 	if(!cin||aiTImeLimit<1){
 		cin.clear();
 		while(cin.get()!='\n');
-		cout<<"setting error. use default 16sec"<<endl;
-		aiTImeLimit=16;
+		cout<<"setting error. use default 10sec"<<endl;
+		aiTImeLimit=10;
 	}
 	
 	cout<<"Find Bluestack"<<endl
@@ -292,6 +295,7 @@ int main(int argv,char *argc[])
 			outtextxy(0,0,oss.str().c_str());
 
 			if(!path[0].empty()){
+				PathInit(globalConfig);
 				applyPath(hwndBluestack,boardMain,path[0],posStart[0],globalConfig);
 				Sleep(5000);
 			}

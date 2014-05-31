@@ -13,14 +13,14 @@ HWND GetBluestackWindow()
 		hWnd=GetForegroundWindow();
 		if(hWnd != NULL){
 			GetWindowText(hWnd,text,100);
-			if(strcmp(text,BLUESTACK_TEXT)==0){
+			if(strncmp(text,BLUESTACK_TEXT,20)==0){
 				return hWnd;
 			}
-			if(text[0]=='G'){
+			if(text[0]=='G'&&text[1]=='e'){
 				return hWnd;
 			}
 		}
-		Sleep(500);
+		Sleep(50);
 	}while(true);
 	return NULL;
 }

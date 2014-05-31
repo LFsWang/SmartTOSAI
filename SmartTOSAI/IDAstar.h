@@ -16,6 +16,7 @@
 #include <sstream>
 #include <cstring>
 #include <easyx.h>
+
 using namespace std;
 
 vector<int> threadDo[THREADMAX];
@@ -44,6 +45,7 @@ struct bestInfo{
 
 bestInfo tinfo[THREADMAX];
 
+int uid=0;
 
 inline bool userStop(){
 	HANDLE hMutex=OpenMutex(MUTEX_ALL_ACCESS,false,"_Smart_User_Wait_Flag");
@@ -172,7 +174,7 @@ int calcCombo(Bead _B[8][8],int tid)
 
 
 
-inline void updateBest(vector<int> *n,int comble,int tid)
+inline void updateBest(vector<int> *n,int comble,int tid,Board &b)
 {
 	if(comble<0)comble=-comble;
 
@@ -247,7 +249,6 @@ inline void updateBest(vector<int> *n,int comble,int tid)
 	//if(tinfo[tid].isFive)oss<<"DD";
 	//else oss<<"ss";
 	outtextxy(0,delta+15,oss.str().c_str());
-
 }
 //int mdeep;
 //if int<x : FIND GOAL
@@ -260,7 +261,7 @@ int LDFS(Board &b,_Pos &pos,int r,int deep,vector<int> *path,int tid)
 	tinfo[tid].isFive=false;
 	int comb=calcCombo(b.b,tid);
 
-	updateBest(path,comb,tid);
+	updateBest(path,comb,tid,b);
 
 	H=2*(tcfg[tid].maxgoal-comb);
 
@@ -345,6 +346,8 @@ bool AIInit(config &cfg){
 	ifstream fin;
 	stringstream ss;
 	int tmp;
+	int getUid=++uid;
+	
 
 	sprintf_s(buf,"cfg\\%dt%d.txt",cfg.GetThread(),cfg.GetThreadMothed());
 	fin.open(buf);
